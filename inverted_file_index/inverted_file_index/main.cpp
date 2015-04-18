@@ -34,14 +34,18 @@ struct record {
   int term_number;
   int document_number;
   int frequency;
-  int file_containing_positions;
+  int position;
 };
 
 struct compare_class {
   bool operator() (struct record i, struct record j) {
     if ( i.term_number != j.term_number )
       return (i.term_number < j.term_number);
-    return (i.document_number < j.document_number);   
+    if ( i.document_number != j.document_number )
+      return (i.document_number < j.document_number);  
+    if ( i.frequency != j.frequency )
+      return (i.frequency < j.frequency);
+    return (i.position < j.position);
   }
 } compare_object;
 
@@ -89,14 +93,17 @@ int main(int argc, char* argv[]) {
       }
     }
     // Second iteration, fills the tuples vector
-    for ( auto it : word_frequency ) {
+    int pos = 0;
+    for ( auto it : D_i ) {
       // Push this record to the vector of tuple records:
       struct record tuple;
-      tuple.term_number = it.first;
+      tuple.term_number = vocabulary[it];
       tuple.document_number = i;
-      tuple.frequency = it.second;
-      tuple.file_containing_positions = i;
+      tuple.frequency = word_frequency[vocabulary[it]];
+      tuple.position = pos;
       tuples_vector.push_back(tuple);
+
+      pos += it.size();
 
       // Dump to the temp file as soon as the k items limit is reached:
       if ( tuples_vector.size() == k ) {
@@ -122,7 +129,7 @@ int main(int argc, char* argv[]) {
 
 
   for ( auto t : tuples_vector ) {
-    cout << t.term_number << " " << t.frequency << endl;
+    cout << t.term_number << " " << t.position << endl;
   }
   cout << k << endl;
 
