@@ -1,13 +1,17 @@
 /*
-Trabalho Pr·tico 1 - Arquivo Invertido
+Trabalho Pr√°tico 1 - Arquivo Invertido
 */
 #include <algorithm>
+#include <cstdlib>
 #include <iostream>
 #include <fstream>
 #include <map>
 #include <string>
 #include <vector>
 
+#include "CollectionReader.h"
+
+using namespace RICPNS;
 using namespace std;
 
 #define MEMORY (40*1<<8)
@@ -51,9 +55,9 @@ struct compare_class {
 
 // This function dumps a vector of tuples into the file
 void dump_tuples(ofstream out, vector<struct record> tuples_vector) {
-  for ( auto t : tuples_vector ) {
-    
-  }
+  //for ( auto t : tuples_vector ) {
+  //
+  //}
 }
 
 
@@ -64,10 +68,10 @@ int main(int argc, char* argv[]) {
 
   ofstream temp ("temp", ofstream::binary);
 
-  int L = vocabulary.size();
-  int k = (MEMORY - L) / w;
-  int b = INITIAL_RUN_SIZE;
-  int R = 0;
+  unsigned int L = vocabulary.size();
+  unsigned int k = (MEMORY - L) / w;
+  unsigned int b = INITIAL_RUN_SIZE;
+  unsigned int R = 0;
 
   vector<struct record> tuples_vector;
 
@@ -84,7 +88,7 @@ int main(int argc, char* argv[]) {
         L = vocabulary.size();
         k = (MEMORY - L) / w;
       }
-      int word_num = vocabulary[it];    
+      int word_num = vocabulary[it];
       // Set the frequency table for this word:
       if ( word_frequency.count(word_num) == 0 ) {
         word_frequency[word_num] = 1;
@@ -108,13 +112,9 @@ int main(int argc, char* argv[]) {
       // Dump to the temp file as soon as the k items limit is reached:
       if ( tuples_vector.size() == k ) {
         sort(tuples_vector.begin(), tuples_vector.end(), compare_object);
-        for ( auto jt : tuples_vector ) {
-          string 
-            buffer = 
-            "<" + to_string(jt.term_number) + 
-            "," + to_string(jt.document_number) +
-            "," + to_string(jt.frequency) + ">\n";
-          temp.write(buffer.c_str(), buffer.size());
+        for ( vector<struct record>::iterator jt = tuples_vector.begin(); jt != tuples_vector.end(); jt++ ) {
+          //string buffer = "<" + to_string((*jt).term_number) + "," + to_string((*jt).document_number) + "," + to_string((*jt).frequency) + ">\n";
+          //temp.write(buffer.c_str(), buffer.size());
         }
         tuples_vector.clear();
         R++;
@@ -128,28 +128,33 @@ int main(int argc, char* argv[]) {
 
 
 
-  for ( auto t : tuples_vector ) {
-    cout << t.term_number << " " << t.position << endl;
+  for ( auto it : tuples_vector ) {
+    cout << it.term_number << " " << it.position << endl;
   }
   cout << k << endl;
 
-  getchar();
   temp.close();
+
+  cout << "Testing CollectionReader class..." << endl;
+
+  string inputDirectory("/home/rodrigo/Devel/search_engine/toyExample");
+  string indexFileName("indexToCompressedColection.txt");
+
+  CollectionReader * reader = new CollectionReader(inputDirectory,
+                           indexFileName);
+  Document doc;
+  doc.clear();
+  int i = 0;
+  while(reader->getNextDocument(doc)) {
+    doc.clear();
+    ++i;
+  }
+  cerr << "Total [" << i << "]" << endl;
+
+  delete reader;
+
+  cout << "Test finished." << endl;
+
   return 0;
 }
 
-
-
-
-
-// Creates de vocabulary, which maps the term to a specific number
-// A temporary file must be created on disk.
-// Set the size of the vocabulary:
-// Set the number of records that can be stored in memory:
-// Set the size of each run;
-// For each document
-// Maps each word with a frequency inside this document
-// A vector contains the whole document.
-// For each index term in D_i:
-// Test whether the vocabulary has the term or not
-// We must count the frequency of the word inside the document
