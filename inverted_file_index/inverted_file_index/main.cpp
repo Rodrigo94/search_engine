@@ -9,6 +9,7 @@ Trabalho Prático 1 - Arquivo Invertido
 #include <string>
 #include <vector>
 
+#include "clean_text.h"
 #include "CollectionReader.h"
 
 using namespace RICPNS;
@@ -146,6 +147,9 @@ int main(int argc, char* argv[]) {
   doc.clear();
   int i = 0;
   while(reader->getNextDocument(doc)) {
+    cout << doc.getURL() << endl;
+    string parser_result = clean_html(doc.getText());
+    cout << parser_result << endl;
     doc.clear();
     ++i;
   }
