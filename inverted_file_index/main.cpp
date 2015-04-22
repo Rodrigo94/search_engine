@@ -11,7 +11,7 @@ Trabalho Prático 1 - Arquivo Invertido
 
 #include "clean_text.h"
 #include "CollectionReader.h"
-#include "text_parser.h"
+#include "index_builder.h"
 
 using namespace RICPNS;
 using namespace std;
