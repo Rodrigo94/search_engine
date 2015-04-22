@@ -8,7 +8,7 @@ Trabalho Prático 1 - Arquivo Invertido
 
 using namespace RICPNS;
 
-#define MEMORY (40*1<<8)
+#define MEMORY (40*1<<20)
 #define w sizeof(tuple_record)
 #define INITIAL_RUN_SIZE (50*1<<10)
 #define NUM_OF_DOCUMENTS 1
@@ -29,8 +29,10 @@ int main(int argc, char* argv[]) {
   // Read documents from the collection:
 
   // Set up the files:
-  std::string inputDirectory("/home/rodrigo/Devel/search_engine/toyExample");
-  std::string indexFileName("indexToCompressedColection.txt");
+  //std::string inputDirectory("/home/rodrigo/Devel/search_engine/toyExample");
+  std::string inputDirectory("/home/rodrigo/Downloads/irCollection");
+  //std::string indexFileName("indexToCompressedColection.txt");
+  std::string indexFileName("index.txt");
 
   // Set up the reader
   CollectionReader * reader = new CollectionReader(inputDirectory,
@@ -42,10 +44,10 @@ int main(int argc, char* argv[]) {
   // Reads the document:
   while(reader->getNextDocument(doc)) {
 
+    // Only for debugging reasons:
+    std::cout << i << ":" << doc.getURL() << std::endl;
 
-    std::cout << doc.getURL() << std::endl;
-    // Calls the google gumbo-parsers
-
+    // Calls the google's gumbo-parsers
     std::string parser_result = clean_html(doc.getText());
     doc.clear();
 
@@ -73,6 +75,8 @@ int main(int argc, char* argv[]) {
   }
 
   delete reader;
+
+  //show_file("temp", vocabulary);
 
   return 0;
 }

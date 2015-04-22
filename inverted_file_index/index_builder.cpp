@@ -35,6 +35,10 @@ void indexer(std::string text, std::map<std::string, int>& vocabulary, std::vect
   while(iss >> word){
     // One more enchantment to get the position of this word:
     int position = int(iss.tellg()) - word.size();
+    // Just in case the tellg returns the null
+    if(position < 0){
+      position = text.size() - word.size();
+    }
     // Another enchantment to remove useless chars (Linear with the word)
     word.erase(std::remove_if(word.begin(), word.end(),  std::ptr_fun(is_useless_char) ), word.end());
     //'word' is the term we were looking for.
@@ -63,7 +67,10 @@ void indexer(std::string text, std::map<std::string, int>& vocabulary, std::vect
 void dump_tuples(std::vector<struct tuple_record>& tuples_vector, std::ofstream& out){
   sort(tuples_vector.begin(), tuples_vector.end(), compare_object);
   for ( std::vector<struct tuple_record>::iterator it = tuples_vector.begin(); it != tuples_vector.end(); it++ ) {
-    out.write(reinterpret_cast<const char *>(&((*it).term_number)), sizeof(int));
+    out.write((char*)(&((*it).term_number)), sizeof(int));
+    out.write((char*)(&((*it).document_number)), sizeof(int));
+    out.write((char*)(&((*it).frequency)), sizeof(int));
+    out.write((char*)(&((*it).position)), sizeof(int));
   }
   tuples_vector.clear();
 }
