@@ -8,7 +8,7 @@
 #include "gumbo.h"
 
 
-static std::string cleantext(GumboNode* node);
+std::string cleantext(GumboNode* node);
 
 std::string clean_html(std::string contents);
 

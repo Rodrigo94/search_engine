@@ -2,7 +2,7 @@
 
 #include "clean_text.h"
 
-static std::string cleantext(GumboNode* node) {
+std::string cleantext(GumboNode* node) {
   if (node->type == GUMBO_NODE_TEXT) {
     return std::string(node->v.text.text);
   } else if ( node->type == GUMBO_NODE_ELEMENT &&

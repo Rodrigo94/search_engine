@@ -13,6 +13,7 @@
 #define INDEX_BUILDER_H_
 
 #include <algorithm>
+#include <fstream>
 #include <functional>
 #include <iostream>
 #include <map>
@@ -29,8 +30,9 @@ struct tuple_record {
 };
 
 // It changes the vector of tuples
-void indexer(std::string text, std::map<std::string, int> vocabulary, std::vector<struct tuple_record> tuples_vector, int doc_number);
+void indexer(std::string text, std::map<std::string, int>& vocabulary, std::vector<struct tuple_record>& tuples_vector, int doc_number);
 
-void dump_tuples(std::vector<struct tuple_record> tuples_vector, std::ofstream& out);
+// It dumps the vector of tuples into the outfile
+void dump_tuples(std::vector<struct tuple_record>& tuples_vector, std::ofstream& out);
 
 #endif /* INDEX_BUILDER_H_ */

@@ -1,10 +1,6 @@
 /*
 Trabalho Prático 1 - Arquivo Invertido
 */
-#include <iostream>
-#include <fstream>
-#include <string>
-
 #include "clean_text.h"
 #include "CollectionReader.h"
 #include "index_builder.h"
@@ -21,7 +17,7 @@ int main(int argc, char* argv[]) {
 
   std::map<std::string, int> vocabulary;
 
-  std::ofstream temp ("temp", std::ofstream::binary);
+  std::ofstream temp ("temp", std::ios::binary | std::ios::out);
 
   unsigned int k = (MEMORY - vocabulary.size()) / w;
   unsigned int b = INITIAL_RUN_SIZE;
@@ -46,6 +42,7 @@ int main(int argc, char* argv[]) {
   // Reads the document:
   while(reader->getNextDocument(doc)) {
 
+
     std::cout << doc.getURL() << std::endl;
     // Calls the google gumbo-parsers
 
@@ -57,8 +54,11 @@ int main(int argc, char* argv[]) {
 
     k = (MEMORY - vocabulary.size()) / w;
     // If there is so much tuples, dump them into the temp file:
-    if ( tuples_vector.size() == k ) {
-      tuples_vector.clear();
+
+    if ( tuples_vector.size() >= k ) {
+
+      dump_tuples(tuples_vector, temp);
+
       R++;
       if ( b*(R + 1) > MEMORY ) {
         b = b / 2;
