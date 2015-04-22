@@ -4,6 +4,7 @@ Trabalho Prático 1 - Arquivo Invertido
 #include "clean_text.h"
 #include "CollectionReader.h"
 #include "index_builder.h"
+#include "../test_functions/display_index.h"
 
 using namespace RICPNS;
 
@@ -17,7 +18,7 @@ int main(int argc, char* argv[]) {
 
   std::map<std::string, int> vocabulary;
 
-  std::ofstream temp ("temp", std::ios::binary | std::ios::out);
+  std::ofstream temp ("temp", std::ofstream::out | std::ofstream::binary);
 
   unsigned int k = (MEMORY - vocabulary.size()) / w;
   unsigned int b = INITIAL_RUN_SIZE;
@@ -36,7 +37,6 @@ int main(int argc, char* argv[]) {
                              indexFileName);
 
   Document doc;
-  //doc.clear();
   int i = 0;
   reader->getNextDocument(doc);
   // Reads the document:

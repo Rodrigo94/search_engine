@@ -21,7 +21,6 @@ struct compare_class {
 
 void indexer(std::string text, std::map<std::string, int>& vocabulary, std::vector<struct tuple_record>& tuples_vector, int doc_number) {
 
-  std::cout << "Vamo construir o indice" << std::endl;
   // This will help us to store the frequency of each word:
   std::map<int, int> word_frequency;
 
@@ -58,15 +57,13 @@ void indexer(std::string text, std::map<std::string, int>& vocabulary, std::vect
     tuple.position = position;
     tuples_vector.push_back(tuple);
   }
-  std::cout << "Para o documento " << doc_number << " temos vector tuples de tamanho " << tuples_vector.size() << std::endl;
 }
 
 // Dumps the vector of tuples into the outfile
 void dump_tuples(std::vector<struct tuple_record>& tuples_vector, std::ofstream& out){
   sort(tuples_vector.begin(), tuples_vector.end(), compare_object);
   for ( std::vector<struct tuple_record>::iterator it = tuples_vector.begin(); it != tuples_vector.end(); it++ ) {
-    //out.write(&((*it).document_number), sizeof(int));
-    out << (*it).term_number << (*it).document_number << (*it).frequency << (*it).position << std::endl;
+    out.write(reinterpret_cast<const char *>(&((*it).term_number)), sizeof(int));
   }
   tuples_vector.clear();
 }
