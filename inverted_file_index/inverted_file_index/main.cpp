@@ -11,6 +11,7 @@ Trabalho Prático 1 - Arquivo Invertido
 
 #include "clean_text.h"
 #include "CollectionReader.h"
+#include "text_parser.h"
 
 using namespace RICPNS;
 using namespace std;
@@ -76,6 +77,38 @@ int main(int argc, char* argv[]) {
 
   vector<struct record> tuples_vector;
 
+  // Read documents from the collection:
+
+  // Set up the files:
+  string inputDirectory("/home/rodrigo/Devel/search_engine/toyExample");
+  string indexFileName("indexToCompressedColection.txt");
+
+  // Set up the reader
+  CollectionReader * reader = new CollectionReader(inputDirectory,
+                             indexFileName);
+
+  Document doc;
+  //doc.clear();
+  int i = 0;
+  reader->getNextDocument(doc);
+  // Reads the document:
+  while(reader->getNextDocument(doc)) {
+    cout << doc.getURL() << endl;
+    // Calls the google gumbo-parsers
+    string parser_result = clean_html(doc.getText());
+    doc.clear();
+    ++i;
+    // Now we are supposed to run the text_parser, which must check for
+    // each word in the parse_result and check the word frequency.
+    std::map<std::string, int> word_frequency = parse_text(parser_result);
+
+    // Then we run over the string again in order to index each term:
+
+  }
+
+  delete reader;
+
+  /*
   for ( int i = 0; i < NUM_OF_DOCUMENTS; i++ ) {
     vector<string> D_i = parser(i);
     map<int, int> word_frequency;
@@ -126,38 +159,17 @@ int main(int argc, char* argv[]) {
     }
 
   }
-
-
-
   for ( auto it : tuples_vector ) {
     cout << it.term_number << " " << it.position << endl;
   }
   cout << k << endl;
 
   temp.close();
+  */
 
-  cout << "Testing CollectionReader class..." << endl;
 
-  string inputDirectory("/home/rodrigo/Devel/search_engine/toyExample");
-  string indexFileName("indexToCompressedColection.txt");
 
-  CollectionReader * reader = new CollectionReader(inputDirectory,
-                           indexFileName);
-  Document doc;
-  doc.clear();
-  int i = 0;
-  while(reader->getNextDocument(doc)) {
-    cout << doc.getURL() << endl;
-    string parser_result = clean_html(doc.getText());
-    cout << parser_result << endl;
-    doc.clear();
-    ++i;
-  }
-  cerr << "Total [" << i << "]" << endl;
 
-  delete reader;
-
-  cout << "Test finished." << endl;
 
   return 0;
 }
