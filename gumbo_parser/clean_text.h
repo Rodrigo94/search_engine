@@ -1,5 +1,3 @@
-
-
 #ifndef CLEAN_TEXT_H_
 #define CLEAN_TEXT_H_
 

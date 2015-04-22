@@ -18,8 +18,19 @@
 #include <map>
 #include <sstream>
 #include <string>
+#include <vector>
 
+// Tuple
+struct tuple_record {
+  int term_number;
+  int document_number;
+  int frequency;
+  int position;
+};
 
-std::map<std::string, int> parse_text(std::string text);
+// It changes the vector of tuples
+void indexer(std::string text, std::map<std::string, int> vocabulary, std::vector<struct tuple_record> tuples_vector, int doc_number);
+
+void dump_tuples(std::vector<struct tuple_record> tuples_vector, std::ofstream& out);
 
 #endif /* INDEX_BUILDER_H_ */
