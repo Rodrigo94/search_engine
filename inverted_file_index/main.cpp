@@ -100,7 +100,8 @@ int main(int argc, char* argv[]) {
     ++i;
     // Now we are supposed to run the text_parser, which must check for
     // each word in the parse_result and check the word frequency.
-    std::map<std::string, int> word_frequency = parse_text(parser_result);
+    std::map<std::string, int> word_frequency;
+    parse_text(parser_result);
 
     // Then we run over the string again in order to index each term:
 

@@ -1,9 +1,4 @@
-/*
- * clean_text.h
- *
- *  Created on: 19/04/2015
- *      Author: rodrigo
- */
+
 
 #ifndef CLEAN_TEXT_H_
 #define CLEAN_TEXT_H_
