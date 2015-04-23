@@ -6,7 +6,7 @@
 #include <map>
 #include <string>
 
-void show_file(std::string filename,  std::map<std::string, int>& vocabulary);
+void show_file(std::string filename);
 
 
 #endif /* DISPLAY_INDEX_H_ */

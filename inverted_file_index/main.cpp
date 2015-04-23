@@ -76,7 +76,7 @@ int main(int argc, char* argv[]) {
 
   delete reader;
 
-  //show_file("temp", vocabulary);
+  //show_file("temp");
 
   return 0;
 }
