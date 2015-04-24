@@ -8,36 +8,26 @@ Trabalho Prático 1 - Arquivo Invertido
 
 using namespace RICPNS;
 
-#define MEMORY (40*1<<20)
-#define w sizeof(tuple_record)
-#define INITIAL_RUN_SIZE (50*1<<10)
-#define NUM_OF_DOCUMENTS 1
-
-
 int main(int argc, char* argv[]) {
 
-  std::map<std::string, int> vocabulary;
+  uint k = MEMORY / w;
+  uint b = INITIAL_RUN_SIZE;
+  uint R = 0;
+
+  Vocabulary vocabulary;
+  TupleVector tuples_vector;
 
   std::ofstream temp ("temp", std::ofstream::out | std::ofstream::binary);
-
-  unsigned int k = (MEMORY - vocabulary.size()) / w;
-  unsigned int b = INITIAL_RUN_SIZE;
-  unsigned int R = 0;
-
-  std::vector<struct tuple_record> tuples_vector;
-
-  // Read documents from the collection:
+  temp.close();
 
   // Set up the files:
   //std::string inputDirectory("/home/rodrigo/Devel/search_engine/toyExample");
-  std::string inputDirectory("/home/rodrigo/Downloads/irCollection");
   //std::string indexFileName("indexToCompressedColection.txt");
   std::string indexFileName("index.txt");
+  std::string inputDirectory("/home/rodrigo/Downloads/irCollection");
 
   // Set up the reader
-  CollectionReader * reader = new CollectionReader(inputDirectory,
-                             indexFileName);
-
+  CollectionReader * reader = new CollectionReader(inputDirectory,indexFileName);
   Document doc;
   int i = 0;
   reader->getNextDocument(doc);
@@ -45,37 +35,56 @@ int main(int argc, char* argv[]) {
   while(reader->getNextDocument(doc)) {
 
     // Only for debugging reasons:
-    std::cout << i << ":" << doc.getURL() << std::endl;
-
+    std::cout << i << ":" << k << ":" << doc.getURL() << std::endl;
     // Calls the google's gumbo-parsers
     std::string parser_result = clean_html(doc.getText());
     doc.clear();
 
     // Now we are supposed to run the indexer:
-    indexer(parser_result, vocabulary, tuples_vector, i);
+    IntVec index_terms;
+    IntVec positions;
+    IntIntMap word_frequency;
 
-    k = (MEMORY - vocabulary.size()) / w;
-    // If there is so much tuples, dump them into the temp file:
+    // Note that we are looking for the side effects on the previous data structures:
+    uint vocabulary_increase = indexer(parser_result, vocabulary, index_terms, positions, word_frequency);
+    parser_result.clear();
 
-    if ( tuples_vector.size() >= k ) {
+    // Updates the memory available memory to dump the tuples:
+    k -= vocabulary_increase / w;
 
-      dump_tuples(tuples_vector, temp);
+    //std::cout << vocabulary_increase << std::endl;
 
-      R++;
-      if ( b*(R + 1) > MEMORY ) {
-        b = b / 2;
+    // Create tuples:
+    for(uint j = 0; j < index_terms.size(); j++){
+      struct tuple_record tuple;
+      tuple.term_number = index_terms[j];
+      tuple.document_number = i;
+      tuple.frequency = word_frequency[index_terms[j]];
+      tuple.position = positions[j];
+      tuples_vector.push_back(tuple);
+      std::cout << tuples_vector.size() << std::endl;
+      if(tuples_vector.size() >= k){
+        dump_tuples(tuples_vector, temp, b);
+        R++;
+        if ( b*(R + 1) > MEMORY ) {
+          b = b / 2;
+        }
       }
     }
-
+    index_terms.clear();
+    positions.clear();
+    word_frequency.clear();
     i++;
   }
 
+  vocabulary.clear();
+
+  dump_tuples(tuples_vector, temp, b);
   if(temp.is_open()){
     temp.close();
   }
 
   delete reader;
-
   //show_file("temp");
 
   return 0;
