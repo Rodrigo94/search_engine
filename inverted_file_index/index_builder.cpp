@@ -25,12 +25,6 @@ Index::~Index(){
   vocabulary.clear();
   Vocabulary(vocabulary).swap(vocabulary);
 
-  dump_tuples();
-  if(temp.is_open()){
-    temp.close();
-  }
-
-  delete reader;
 }
 
 
@@ -62,6 +56,12 @@ void Index::index_documents(){
     clear_temporaries();
     i++;
   }
+  dump_tuples();
+  if(temp.is_open()){
+    temp.close();
+  }
+
+  delete reader;
 }
 
 
@@ -119,7 +119,6 @@ void Index::push_tuple(uint term_num, uint doc_num){
   tuples_vector.push_back(tuple);
   //std::cout << tuples_vector.size() << std::endl;
   if(tuples_vector.size() >= k_){
-    RunsVector.push_back(runs_offset);
     uint run_size = dump_tuples();
     runs_offset += run_size;
     clear_temporaries();
@@ -142,18 +141,11 @@ void Index::clear_temporaries(){
 // Dumps the vector of tuples into the outfile
 uint Index::dump_tuples(){
   uint run_size = 0;
+  RunsOffsetsVector.push_back(runs_offset);
   sort(tuples_vector.begin(), tuples_vector.end(), Tuple::compare());
   tuples_vector[0].writeTuple(temp);
   run_size += 4*sizeof(uint);
   for ( uint i = 1; i < tuples_vector.size(); i++ ) {
-    /*if(tuples_vector[i].sameDocument(tuples_vector[i-1])){
-      uint pos = tuples_vector[i].Position();
-      temp.write((char*)&pos, sizeof(uint));
-      run_size += sizeof(uint);
-    } else {
-      tuples_vector[i].writeTuple(temp);
-      run_size += 4*sizeof(uint);
-    }*/
     tuples_vector[i].writeTuple(temp);
     run_size += 4*sizeof(uint);
   }
@@ -162,3 +154,19 @@ uint Index::dump_tuples(){
   return run_size;
 }
 
+uint Index::getBlockSize(){
+  return b_;
+}
+
+std::vector<Lint>& Index::getRunsOffsetsVector(){
+  return  RunsOffsetsVector;
+}
+
+/*if(tuples_vector[i].sameDocument(tuples_vector[i-1])){
+      uint pos = tuples_vector[i].Position();
+      temp.write((char*)&pos, sizeof(uint));
+      run_size += sizeof(uint);
+    } else {
+      tuples_vector[i].writeTuple(temp);
+      run_size += 4*sizeof(uint);
+    }*/

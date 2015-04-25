@@ -34,9 +34,10 @@
 // In order to ease the pain
 typedef std::map<std::string, uint> Vocabulary;
 typedef std::map<uint, uint> IntIntMap;
-typedef std::vector<Tuple> TupleVector;
 typedef std::vector<uint> IntVec;
+typedef std::vector<Tuple> TupleVector;
 typedef long long int Lint;
+typedef std::vector<Lint> LintVec;
 
 using namespace RICPNS;
 
@@ -54,9 +55,9 @@ private:
   uint k_;
   uint b_;
   uint R_;
-  long long int runs_offset;
+  Lint runs_offset;
   std::ofstream temp;
-  std::vector<Lint> RunsVector;
+  std::vector<Lint> RunsOffsetsVector;
 
   CollectionReader * reader;
   Document doc;
@@ -79,6 +80,9 @@ public:
   void push_tuple(uint term_num, uint doc_num);
   void clear_temporaries();
   uint dump_tuples();
+
+  uint getBlockSize();
+  std::vector<Lint>& getRunsOffsetsVector();
 
 };
 
