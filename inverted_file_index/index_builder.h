@@ -21,6 +21,8 @@
 #include <string>
 #include <vector>
 
+#include "CollectionReader.h"
+
 #define MEMORY (40*(1<<20))
 #define w (4*sizeof(int))
 #define INITIAL_RUN_SIZE (50*1<<10)
@@ -32,18 +34,49 @@ typedef std::map<uint, uint> IntIntMap;
 typedef std::vector<struct tuple_record> TupleVector;
 typedef std::vector<uint> IntVec;
 
+using namespace RICPNS;
+
 // Tuple
 struct tuple_record {
   uint term_number;
   uint document_number;
   uint frequency;
   uint position;
+
+};
+
+class Index{
+private:
+  uint k_;
+  uint b_;
+  uint R_;
+  std::ofstream temp;
+
+  CollectionReader * reader;
+  Document doc;
+
+  // These two are persistent
+  TupleVector tuples_vector;
+  Vocabulary vocabulary;
+
+  // These three can be removed from memory over time. They are temporary.
+  IntVec index_terms;
+  IntVec positions;
+  IntIntMap word_frequency;
+
+public:
+  Index(uint k, uint b, std::string indexFile, std::string inputDir);
+  ~Index();
+
+  void index_documents();
+  void index_text(std::string text);
+  void push_tuple(uint term_num, uint doc_num);
+  void clear_temporaries();
+  void dump_tuples();
+
 };
 
 
-uint indexer(std::string text, Vocabulary& vocabulary, IntVec& index_terms, IntVec& positions, IntIntMap& word_frequency);
 
-// It dumps the vector of tuples into the outfile
-void dump_tuples(TupleVector& tuples_vector, std::ofstream& out, uint padding);
 
 #endif /* INDEX_BUILDER_H_ */

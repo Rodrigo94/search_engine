@@ -1,4 +1,6 @@
 #include "index_builder.h"
+#include "clean_text.h"
+#include "../test_functions/display_index.h"
 
 // Function that removes useless characters
 bool is_useless_char(unsigned int i){
@@ -19,10 +21,65 @@ struct compare_class {
   }
 } compare_object;
 
-uint indexer(std::string text, Vocabulary& vocabulary, IntVec& index_terms, IntVec& positions, IntIntMap& word_frequency) {
+Index::Index(uint k, uint b, std::string indexFile, std::string inputDir){
+  k_ = k;
+  b_ = b;
+  R_ = 0;
+  temp.open("temp", std::ofstream::out | std::ofstream::binary);
+  reader = new CollectionReader(inputDir,indexFile);
+  reader->getNextDocument(doc);
+}
 
-  // This variable keeps the increasing size of the vocabulary:
-  uint vocabulary_increase = 0;
+Index::~Index(){
+
+  tuples_vector.clear();
+  TupleVector(tuples_vector).swap(tuples_vector);
+
+  vocabulary.clear();
+  Vocabulary(vocabulary).swap(vocabulary);
+
+  dump_tuples();
+  if(temp.is_open()){
+    temp.close();
+  }
+
+  delete reader;
+}
+
+
+void Index::index_documents(){
+  int i = 0;
+  // Reads the document:
+  while(reader->getNextDocument(doc)) {
+
+    // Only for debugging reasons:
+    std::cout << i << ":" << k_ << ":" << doc.getURL() << std::endl;
+
+    // Calls the google's gumbo-parsers
+    std::string parser_result = clean_html(doc.getText());
+    doc.clear();
+
+
+    // Note that we are looking for the side effects on the previous data structures:
+    index_text(parser_result);
+    parser_result.clear();
+    std::string(parser_result).swap(parser_result);
+
+    // Updates the memory available memory to dump the tuples:
+    k_ = (MEMORY - vocabulary.size())/w;
+
+
+    // Create tuples:
+    for(uint j = 0; j < index_terms.size(); j++){
+      push_tuple(j, i);
+    }
+    clear_temporaries();
+    i++;
+  }
+}
+
+
+void Index::index_text(std::string text) {
 
   // We take the vocabulary's length until now (So we can keep the count of the words):
   uint word_count = vocabulary.size();
@@ -50,8 +107,6 @@ uint indexer(std::string text, Vocabulary& vocabulary, IntVec& index_terms, IntV
       if (vocabulary.count(word) == 0){
         vocabulary[word] = word_count;
         word_count++;
-        vocabulary_increase += sizeof(uint);
-        vocabulary_increase += uint(word.size());
       }
       uint word_num = vocabulary[word];
 
@@ -67,31 +122,58 @@ uint indexer(std::string text, Vocabulary& vocabulary, IntVec& index_terms, IntV
       // Set the position:
       positions.push_back(position);
     }
+    word.clear();
+    std::string(word).swap(word);
   }
-  iss.clear();
-  word.clear();
-  return vocabulary_increase;
+}
 
+
+void Index::push_tuple(uint term_num, uint doc_num){
+  struct tuple_record tuple;
+  tuple.term_number = index_terms[term_num];
+  tuple.document_number = doc_num;
+  tuple.frequency = word_frequency[index_terms[term_num]];
+  tuple.position = positions[term_num];
+  tuples_vector.push_back(tuple);
+  //std::cout << tuples_vector.size() << std::endl;
+  if(tuples_vector.size() >= k_){
+    dump_tuples();
+    clear_temporaries();
+    R_++;
+    if ( b_*(R_ + 1) > MEMORY ) {
+      b_ = b_ / 2;
+    }
+  }
+}
+
+void Index::clear_temporaries(){
+  index_terms.clear();
+  positions.clear();
+  word_frequency.clear();
+  IntVec(index_terms).swap(index_terms);
+  IntVec(positions).swap(positions);
+  IntIntMap(word_frequency).swap(word_frequency);
 }
 
 // Dumps the vector of tuples into the outfile
-void dump_tuples(TupleVector& tuples_vector, std::ofstream& out, uint padding){
+void Index::dump_tuples(){
   sort(tuples_vector.begin(), tuples_vector.end(), compare_object);
-  out.write((char*)(&((tuples_vector[0]).term_number)), sizeof(int));
-  out.write((char*)(&((tuples_vector[0]).document_number)), sizeof(int));
-  out.write((char*)(&((tuples_vector[0]).frequency)), sizeof(int));
-  out.write((char*)(&((tuples_vector[0]).position)), sizeof(int));
+  temp.write((char*)(&((tuples_vector[0]).term_number)), sizeof(int));
+  temp.write((char*)(&((tuples_vector[0]).document_number)), sizeof(int));
+  temp.write((char*)(&((tuples_vector[0]).frequency)), sizeof(int));
+  temp.write((char*)(&((tuples_vector[0]).position)), sizeof(int));
   for ( uint i = 1; i < tuples_vector.size(); i++ ) {
     if(tuples_vector[i-1].term_number == tuples_vector[i].term_number &&
        tuples_vector[i-1].document_number == tuples_vector[i].document_number){
-      out.write((char*)(&((tuples_vector[i]).position)), sizeof(int));
+      temp.write((char*)(&((tuples_vector[i]).position)), sizeof(int));
     } else {
-      out.write((char*)(&((tuples_vector[i]).term_number)), sizeof(int));
-      out.write((char*)(&((tuples_vector[i]).document_number)), sizeof(int));
-      out.write((char*)(&((tuples_vector[i]).frequency)), sizeof(int));
-      out.write((char*)(&((tuples_vector[i]).position)), sizeof(int));
+      temp.write((char*)(&((tuples_vector[i]).term_number)), sizeof(int));
+      temp.write((char*)(&((tuples_vector[i]).document_number)), sizeof(int));
+      temp.write((char*)(&((tuples_vector[i]).frequency)), sizeof(int));
+      temp.write((char*)(&((tuples_vector[i]).position)), sizeof(int));
     }
   }
   tuples_vector.clear();
+  std::vector<struct tuple_record>(tuples_vector).swap(tuples_vector);
 }
 
