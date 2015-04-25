@@ -22,6 +22,9 @@
 #include <vector>
 
 #include "CollectionReader.h"
+#include "clean_text.h"
+#include "../test_functions/display_index.h"
+#include "tuple.h"
 
 #define MEMORY (40*(1<<20))
 #define w (4*sizeof(int))
@@ -29,9 +32,9 @@
 #define NUM_OF_DOCUMENTS 1
 
 // In order to ease the pain
-typedef std::map<std::string, unsigned int> Vocabulary;
+typedef std::map<std::string, uint> Vocabulary;
 typedef std::map<uint, uint> IntIntMap;
-typedef std::vector<struct tuple_record> TupleVector;
+typedef std::vector<Tuple> TupleVector;
 typedef std::vector<uint> IntVec;
 
 using namespace RICPNS;
@@ -51,6 +54,7 @@ private:
   uint b_;
   uint R_;
   std::ofstream temp;
+  std::vector<uint> RunsVector;
 
   CollectionReader * reader;
   Document doc;

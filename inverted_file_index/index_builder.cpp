@@ -1,25 +1,11 @@
 #include "index_builder.h"
-#include "clean_text.h"
-#include "../test_functions/display_index.h"
 
 // Function that removes useless characters
-bool is_useless_char(unsigned int i){
+bool is_useless_char(uint i){
   //return std::isspace(i) | std::iswblank(i) | std::isdigit(i) | std::ispunct(i) | std::iscntrl(i) ;
   return !std::isalpha(i);
 }
 
-// Comparision function
-struct compare_class {
-  bool operator() (struct tuple_record i, struct tuple_record j) {
-    if ( i.term_number != j.term_number )
-      return (i.term_number < j.term_number);
-    if ( i.document_number != j.document_number )
-      return (i.document_number < j.document_number);
-    if ( i.frequency != j.frequency )
-      return (i.frequency < j.frequency);
-    return (i.position < j.position);
-  }
-} compare_object;
 
 Index::Index(uint k, uint b, std::string indexFile, std::string inputDir){
   k_ = k;
@@ -129,11 +115,7 @@ void Index::index_text(std::string text) {
 
 
 void Index::push_tuple(uint term_num, uint doc_num){
-  struct tuple_record tuple;
-  tuple.term_number = index_terms[term_num];
-  tuple.document_number = doc_num;
-  tuple.frequency = word_frequency[index_terms[term_num]];
-  tuple.position = positions[term_num];
+  Tuple tuple(index_terms[term_num], doc_num,  word_frequency[index_terms[term_num]], positions[term_num]);
   tuples_vector.push_back(tuple);
   //std::cout << tuples_vector.size() << std::endl;
   if(tuples_vector.size() >= k_){
@@ -157,23 +139,21 @@ void Index::clear_temporaries(){
 
 // Dumps the vector of tuples into the outfile
 void Index::dump_tuples(){
-  sort(tuples_vector.begin(), tuples_vector.end(), compare_object);
-  temp.write((char*)(&((tuples_vector[0]).term_number)), sizeof(int));
-  temp.write((char*)(&((tuples_vector[0]).document_number)), sizeof(int));
-  temp.write((char*)(&((tuples_vector[0]).frequency)), sizeof(int));
-  temp.write((char*)(&((tuples_vector[0]).position)), sizeof(int));
+  uint run_size = 0;
+  sort(tuples_vector.begin(), tuples_vector.end(), Tuple::compare());
+  tuples_vector[0].writeTuple(temp);
+  run_size += 4*sizeof(uint);
   for ( uint i = 1; i < tuples_vector.size(); i++ ) {
-    if(tuples_vector[i-1].term_number == tuples_vector[i].term_number &&
-       tuples_vector[i-1].document_number == tuples_vector[i].document_number){
-      temp.write((char*)(&((tuples_vector[i]).position)), sizeof(int));
+    if(tuples_vector[i].sameDocument(tuples_vector[i-1])){
+      uint pos = tuples_vector[i].Position();
+      temp.write((char*)&pos, sizeof(uint));
+      run_size += sizeof(uint);
     } else {
-      temp.write((char*)(&((tuples_vector[i]).term_number)), sizeof(int));
-      temp.write((char*)(&((tuples_vector[i]).document_number)), sizeof(int));
-      temp.write((char*)(&((tuples_vector[i]).frequency)), sizeof(int));
-      temp.write((char*)(&((tuples_vector[i]).position)), sizeof(int));
+      tuples_vector[i].writeTuple(temp);
+      run_size += 4*sizeof(uint);
     }
   }
   tuples_vector.clear();
-  std::vector<struct tuple_record>(tuples_vector).swap(tuples_vector);
+  TupleVector(tuples_vector).swap(tuples_vector);
 }
 
