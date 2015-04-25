@@ -36,6 +36,7 @@ typedef std::map<std::string, uint> Vocabulary;
 typedef std::map<uint, uint> IntIntMap;
 typedef std::vector<Tuple> TupleVector;
 typedef std::vector<uint> IntVec;
+typedef long long int Lint;
 
 using namespace RICPNS;
 
@@ -53,8 +54,9 @@ private:
   uint k_;
   uint b_;
   uint R_;
+  long long int runs_offset;
   std::ofstream temp;
-  std::vector<uint> RunsVector;
+  std::vector<Lint> RunsVector;
 
   CollectionReader * reader;
   Document doc;
@@ -76,7 +78,7 @@ public:
   void index_text(std::string text);
   void push_tuple(uint term_num, uint doc_num);
   void clear_temporaries();
-  void dump_tuples();
+  uint dump_tuples();
 
 };
 

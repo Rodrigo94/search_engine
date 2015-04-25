@@ -11,6 +11,7 @@ Index::Index(uint k, uint b, std::string indexFile, std::string inputDir){
   k_ = k;
   b_ = b;
   R_ = 0;
+  runs_offset = 0;
   temp.open("temp", std::ofstream::out | std::ofstream::binary);
   reader = new CollectionReader(inputDir,indexFile);
   reader->getNextDocument(doc);
@@ -46,7 +47,6 @@ void Index::index_documents(){
     doc.clear();
 
 
-    // Note that we are looking for the side effects on the previous data structures:
     index_text(parser_result);
     parser_result.clear();
     std::string(parser_result).swap(parser_result);
@@ -119,7 +119,9 @@ void Index::push_tuple(uint term_num, uint doc_num){
   tuples_vector.push_back(tuple);
   //std::cout << tuples_vector.size() << std::endl;
   if(tuples_vector.size() >= k_){
-    dump_tuples();
+    RunsVector.push_back(runs_offset);
+    uint run_size = dump_tuples();
+    runs_offset += run_size;
     clear_temporaries();
     R_++;
     if ( b_*(R_ + 1) > MEMORY ) {
@@ -138,22 +140,25 @@ void Index::clear_temporaries(){
 }
 
 // Dumps the vector of tuples into the outfile
-void Index::dump_tuples(){
+uint Index::dump_tuples(){
   uint run_size = 0;
   sort(tuples_vector.begin(), tuples_vector.end(), Tuple::compare());
   tuples_vector[0].writeTuple(temp);
   run_size += 4*sizeof(uint);
   for ( uint i = 1; i < tuples_vector.size(); i++ ) {
-    if(tuples_vector[i].sameDocument(tuples_vector[i-1])){
+    /*if(tuples_vector[i].sameDocument(tuples_vector[i-1])){
       uint pos = tuples_vector[i].Position();
       temp.write((char*)&pos, sizeof(uint));
       run_size += sizeof(uint);
     } else {
       tuples_vector[i].writeTuple(temp);
       run_size += 4*sizeof(uint);
-    }
+    }*/
+    tuples_vector[i].writeTuple(temp);
+    run_size += 4*sizeof(uint);
   }
   tuples_vector.clear();
   TupleVector(tuples_vector).swap(tuples_vector);
+  return run_size;
 }
 

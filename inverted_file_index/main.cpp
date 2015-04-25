@@ -2,6 +2,7 @@
 Trabalho Prático 1 - Arquivo Invertido
 */
 #include "index_builder.h"
+#include "extern_ord.h"
 
 
 int main(int argc, char* argv[]) {
@@ -12,7 +13,6 @@ int main(int argc, char* argv[]) {
   Index index(MEMORY/w, INITIAL_RUN_SIZE, indexFile, inputDir);
 
   index.index_documents();
-
 
   return 0;
 }

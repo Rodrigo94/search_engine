@@ -27,6 +27,15 @@ public:
       return (i.position_ < j.position_);
     }
   };
+  struct compare_rev{
+    bool operator() (const Tuple& i, const Tuple& j){
+      if ( i.term_number_ != j.term_number_ )
+        return (i.term_number_ > j.term_number_);
+      if ( i.document_number_ != j.document_number_)
+        return (i.document_number_ > j.document_number_);
+      return (i.position_ > j.position_);
+    }
+  };
 };
 
 
