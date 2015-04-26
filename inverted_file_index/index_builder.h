@@ -71,6 +71,8 @@ public:
   void push_tuple(uint term_num, uint doc_num);
   void clear_temporaries();
   uint dump_tuples();
+  void dump_vocabulary();
+  void dump_offsets();
 
   uint getBlockSize();
   std::vector<Lint>& getRunsOffsetsVector();

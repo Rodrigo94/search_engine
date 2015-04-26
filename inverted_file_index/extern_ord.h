@@ -17,6 +17,7 @@ private:
   std::ifstream runs_file;
   std::ofstream out_file;
   uint block_size_;
+  Lint runs_file_size;
 public:
   ExternalSorter(const LintVec& RunsSize, uint block_size, std::string runsFile);
   ~ExternalSorter();

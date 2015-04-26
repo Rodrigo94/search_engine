@@ -6,6 +6,10 @@ bool is_useless_char(uint i){
   return !std::isalpha(i);
 }
 
+bool pair_compare(const std::pair<uint, std::string>& i, const std::pair<uint, std::string>& j) {
+  return i.first < j.first;
+}
+
 
 Index::Index(uint k, uint b, std::string indexFile, std::string inputDir){
   k_ = k;
@@ -22,8 +26,12 @@ Index::~Index(){
   tuples_vector.clear();
   TupleVector(tuples_vector).swap(tuples_vector);
 
+  dump_vocabulary();
+
   vocabulary.clear();
   Vocabulary(vocabulary).swap(vocabulary);
+
+  dump_offsets();
 
 }
 
@@ -81,7 +89,7 @@ void Index::index_text(std::string text) {
     // One more enchantment to get the position of this word:
     uint position = uint(iss.tellg()) - word.size();
     // Just in case the tellg returns the null
-    if(position < 0){
+    if(int(position) < 0){
       position = text.size() - word.size();
     }
 
@@ -153,16 +161,43 @@ uint Index::dump_tuples(){
   TupleVector(tuples_vector).swap(tuples_vector);
   //Adding padding bytes:
   uint padding_bytes_amount = (b_ - (run_size % b_))/(4*sizeof(uint));
-  Tuple tuple(-1,-1,-1,-1);
+  uint MAX = 1<<30;
+  Tuple tuple(MAX,MAX,MAX,MAX);
   for(uint i = 0; i<padding_bytes_amount; i++){
    tuple.writeTuple(temp);
   }
-  std::cout << run_size + 4*sizeof(uint)*padding_bytes_amount << std::endl;
+  //std::cout << run_size + 4*sizeof(uint)*padding_bytes_amount << std::endl;
   return run_size + 4*sizeof(uint)*padding_bytes_amount;
 }
 
 uint Index::getBlockSize(){
   return b_;
+}
+
+void Index::dump_vocabulary(){
+  std::vector<std::pair<uint, std::string> > dict;
+  for(auto it: vocabulary){
+    std::pair<uint, std::string> dict_pair(it.second, it.first);
+    dict.push_back(dict_pair);
+  }
+  sort(dict.begin(), dict.end(), pair_compare);
+  std::ofstream dict_out_file("vocabulary");
+  for(auto it: dict){
+    dict_out_file << it.second;
+    dict_out_file << "\n";
+  }
+  dict_out_file.close();
+  dict.clear();
+  std::vector<std::pair<uint, std::string> >(dict).swap(dict);
+}
+
+void Index::dump_offsets() {
+  std::ofstream offset_out_file;
+  offset_out_file.open("offsets", std::ifstream::out | std::ifstream::binary);
+  for(auto it: RunsOffsetsVector){
+    offset_out_file.write((char*)&it, sizeof(long long int));
+  }
+  offset_out_file.close();
 }
 
 std::vector<Lint>& Index::getRunsOffsetsVector(){

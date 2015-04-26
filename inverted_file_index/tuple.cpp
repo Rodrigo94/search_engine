@@ -33,11 +33,11 @@ void Tuple::printTuple(){
   std::cout << "<" << TermNumber() << ", " << DocumentNumber() << ", " << Frequency() << ", " << Position() << ">" << std::endl;
 }
 
-void Tuple::writeTuple(std::ofstream& temp){
-  temp.write((char*)&term_number_, sizeof(uint));
-  temp.write((char*)&document_number_, sizeof(uint));
-  temp.write((char*)&frequency_, sizeof(uint));
-  temp.write((char*)&position_, sizeof(uint));
+void Tuple::writeTuple(std::ofstream& out){
+  out.write((char*)&term_number_, sizeof(uint));
+  out.write((char*)&document_number_, sizeof(uint));
+  out.write((char*)&frequency_, sizeof(uint));
+  out.write((char*)&position_, sizeof(uint));
 }
 
 bool Tuple::sameDocument(Tuple i){
@@ -50,30 +50,37 @@ bool Tuple::sameDocument(Tuple i){
  * ************************************************************************************************
  */
 
-TupleRun::TupleRun(std::vector<Tuple>& Run, long long int run_offset, uint block_size, uint run_number){
+TupleRun::TupleRun(std::vector<Tuple>& Run, long long int run_offset, long long int next_run_offset, uint block_size, uint run_number){
   this->Run = Run;
   this->run_offset = run_offset;
   this->block_size = block_size;
   this->run_number = run_number;
+  this->next_run_offset = next_run_offset;
   run_relative_offset = 0;
 }
 
 TupleRun::~TupleRun(){
-
+  DeleteRun();
 }
 
 Tuple TupleRun::First(){
   return Run.front();
 }
 
-void TupleRun::Pop(){
-  Run.front().printTuple();
+Tuple TupleRun::Last(){
+  return Run.back();
+}
+
+void TupleRun::PopWrite(std::ofstream& out){
+  Run.front().writeTuple(out);
   Run.erase(Run.begin());
 }
 
 bool TupleRun::HasMoreToRead(){
-
-  return 1;
+  if(run_offset + run_relative_offset == next_run_offset){
+    return false;
+  }
+  return true;
 }
 
 void TupleRun::ReadMoreData(std::ifstream& file){

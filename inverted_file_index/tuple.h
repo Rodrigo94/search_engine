@@ -19,7 +19,7 @@ public:
   uint DocumentNumber();
   uint Frequency();
   uint Position();
-  void writeTuple(std::ofstream& temp);
+  void writeTuple(std::ofstream& out);
   void printTuple();
   bool sameDocument(Tuple i);
   struct compare{
@@ -43,11 +43,12 @@ private:
   uint block_size;
   uint run_number;
 public:
-  TupleRun(std::vector<Tuple>& Run, long long int run_offset, uint block_size, uint run_number);
+  TupleRun(std::vector<Tuple>& Run, long long int run_offset, long long int next_run_offset, uint block_size, uint run_number);
   ~TupleRun();
 
   Tuple First();
-  void Pop();
+  Tuple Last();
+  void PopWrite(std::ofstream& out);
   bool HasMoreToRead();
   bool Empty();
 
