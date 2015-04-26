@@ -38,19 +38,29 @@ class TupleRun{
 private:
   std::vector<Tuple> Run;
   long long int run_offset;
+  long long int next_run_offset;
   uint run_relative_offset;
   uint block_size;
   uint run_number;
 public:
   TupleRun(std::vector<Tuple>& Run, long long int run_offset, uint block_size, uint run_number);
   ~TupleRun();
-  bool RemoveFirst();
-  void IncRelativeOffset();
-  void InsertTuple(Tuple& tuple);
+
+  Tuple First();
+  void Pop();
+  bool HasMoreToRead();
   bool Empty();
-  long long int getRunOffset();
-  uint getRunRelativeOffset();
+
+  void IncRelativeOffset();
+  void InsertTupleVec(std::vector<Tuple>& tuple_vec);
+
   uint getRunNumber();
+  uint getRunRelativeOffset();
+  long long int getRunOffset();
+
+  void ReadMoreData(std::ifstream& file);
+
+  void DeleteRun();
 
   struct compare_vector {
     bool operator() (TupleRun& i, TupleRun& j){

@@ -152,12 +152,13 @@ uint Index::dump_tuples(){
   tuples_vector.clear();
   TupleVector(tuples_vector).swap(tuples_vector);
   //Adding padding bytes:
-  uint padding_bytes_amount = b_ - run_size;
+  uint padding_bytes_amount = (b_ - (run_size % b_))/(4*sizeof(uint));
   Tuple tuple(-1,-1,-1,-1);
   for(uint i = 0; i<padding_bytes_amount; i++){
-   //tuple.writeTuple(temp);
+   tuple.writeTuple(temp);
   }
-  return run_size;
+  std::cout << run_size + 4*sizeof(uint)*padding_bytes_amount << std::endl;
+  return run_size + 4*sizeof(uint)*padding_bytes_amount;
 }
 
 uint Index::getBlockSize(){
@@ -168,11 +169,3 @@ std::vector<Lint>& Index::getRunsOffsetsVector(){
   return  RunsOffsetsVector;
 }
 
-/*if(tuples_vector[i].sameDocument(tuples_vector[i-1])){
-      uint pos = tuples_vector[i].Position();
-      temp.write((char*)&pos, sizeof(uint));
-      run_size += sizeof(uint);
-    } else {
-      tuples_vector[i].writeTuple(temp);
-      run_size += 4*sizeof(uint);
-    }*/

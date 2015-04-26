@@ -28,7 +28,7 @@
 
 #define MEMORY (40*(1<<20))
 #define w (4*sizeof(int))
-#define INITIAL_RUN_SIZE (50*1<<10)
+#define INITIAL_RUN_SIZE (50*(1<<10))
 #define NUM_OF_DOCUMENTS 1
 
 // In order to ease the pain

@@ -16,8 +16,7 @@ int main(int argc, char* argv[]) {
 
   ExternalSorter extern_sorter(index.getRunsOffsetsVector(), index.getBlockSize(), "temp");
   extern_sorter.ReadAllRuns();
-  extern_sorter.PrintRuns();
-
+  extern_sorter.Sort();
   return 0;
 }
 
