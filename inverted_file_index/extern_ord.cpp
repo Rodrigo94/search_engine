@@ -21,7 +21,7 @@ void ExternalSorter::ReadAllRuns(){
   int run_number = 0;
   for(auto offset: RunsSize_){
     TupleVector tuple_vec;
-    TupleRun tuple_run(tuple_vec, RunsSize_[run_number]);
+    TupleRun tuple_run(tuple_vec, RunsSize_[run_number], block_size_, run_number);
     // Push a vector that will store each run inside the structure 'Runs'
     Runs.push_back(tuple_run);
     // Read the i'th run from the file
@@ -38,6 +38,7 @@ void ExternalSorter::ReadOneRun(uint run_number, Lint offset, uint offset_inside
   runs_file.read(buffer, block_size_);
   // Create a tuple block with the tuples read from the file
   CreateTupleBlock(run_number, buffer);
+  Runs[run_number].IncRelativeOffset();
   delete[] buffer;
 }
 
@@ -68,28 +69,29 @@ void ExternalSorter::Sort(){
   for(auto it: Runs){
     Q.push(it);
   }
+  while(!PopSmaller()){
 
+  }
 }
 
 void ExternalSorter::Insert(const Tuple& tuple){
  // Q.push(tuple);
 }
 
-void ExternalSorter::PopSmaller(){
-  TupleVector min_tuple_vec = Q.top();
-  Tuple tuple = min_tuple_vec.front();
-  tuple.printTuple();
-  min_tuple_vec.erase(min_tuple_vec.begin());
-  if(min_tuple_vec.empty()){
-    // Read more b bytes from this run
-    ReadOneRun(i, it, 0);
+bool ExternalSorter::PopSmaller(){
+  TupleRun min_tuple_run = Q.top();
+  bool is_a_padding_byte = min_tuple_run.RemoveFirst();
+  if(min_tuple_run.Empty()){
+    // Read more b bytes from this run, increment the offset of the tuple run;
+    ReadOneRun(min_tuple_run.getRunNumber(), min_tuple_run.getRunOffset(), min_tuple_run.getRunRelativeOffset());
   }
+  return is_a_padding_byte;
 }
 
 void ExternalSorter::PrintRuns(){
   for(auto it: Runs){
-    for(auto jt: it){
-       jt.printTuple();
-    }
+    //for(auto jt: it){
+    //   //jt.printTuple();
+    //}
   }
 }

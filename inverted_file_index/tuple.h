@@ -33,28 +33,32 @@ public:
   };
 };
 
+
 class TupleRun{
 private:
-  TupleVector Run;
-  Lint run_offset;
-  uint current_block;
+  std::vector<Tuple> Run;
+  long long int run_offset;
+  uint run_relative_offset;
+  uint block_size;
+  uint run_number;
 public:
-  TupleRun(TupleVector& Run, Lint run_offset);
+  TupleRun(std::vector<Tuple>& Run, long long int run_offset, uint block_size, uint run_number);
   ~TupleRun();
-  void RemoveFirst();
-  void IncCurrentBlock();
+  bool RemoveFirst();
+  void IncRelativeOffset();
   void InsertTuple(Tuple& tuple);
-
-  uint getCurrentBlock();
-  Lint getRunOffset();
+  bool Empty();
+  long long int getRunOffset();
+  uint getRunRelativeOffset();
+  uint getRunNumber();
 
   struct compare_vector {
-    bool operator() (const TupleRun& i, const TupleRun& j){
-      if ( i.Run.front().term_number_ != j.Run.front().term_number_ )
-        return (i.Run.front().term_number_ > j.Run.front().term_number_);
-      if ( i.Run.front().document_number_ != j.Run.front().document_number_)
-        return (i.Run.front().document_number_ > j.Run.front().document_number_);
-      return (i.Run.front().position_ > j.Run.front().position_);
+    bool operator() (TupleRun& i, TupleRun& j){
+      if ( i.Run.front().TermNumber() != j.Run.front().TermNumber())
+        return (i.Run.front().TermNumber() > j.Run.front().TermNumber());
+      if ( i.Run.front().DocumentNumber() != j.Run.front().DocumentNumber())
+        return (i.Run.front().DocumentNumber() > j.Run.front().DocumentNumber());
+      return (i.Run.front().Position() > j.Run.front().Position());
     }
   };
 };

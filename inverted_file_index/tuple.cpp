@@ -44,32 +44,46 @@ bool Tuple::sameDocument(Tuple i){
   return this->term_number_ == i.term_number_ && this->document_number_ == i.document_number_;
 }
 
-TupleRun::TupleRun(TupleVector& Run, uint num_of_blocks, Lint run_offset){
+TupleRun::TupleRun(std::vector<Tuple>& Run, long long int run_offset, uint block_size, uint run_number){
   this->Run = Run;
   this->run_offset = run_offset;
-  current_block = 0;
+  this->block_size = block_size;
+  this->run_number = run_number;
+  run_relative_offset = 0;
 }
 
 TupleRun::~TupleRun(){
 
 }
 
-void TupleRun::RemoveFirst(){
+bool TupleRun::RemoveFirst(){
+  Run.front().printTuple();
+  bool is_a_padding_byte = (int(Run.front().TermNumber()) < 0);
   Run.erase(Run.begin());
+  return is_a_padding_byte;
 }
 
-void TupleRun::IncCurrentBlock(){
-  current_block++;
+void TupleRun::IncRelativeOffset(){
+  run_relative_offset += block_size;
 }
 
-uint TupleRun::getCurrentBlock(){
-  return current_block;
+bool TupleRun::Empty(){
+  return Run.empty();
 }
+
 
 void TupleRun::InsertTuple(Tuple& tuple){
   Run.push_back(tuple);
 }
 
- Lint TupleRun::getRunOffset(){
+ long long int TupleRun::getRunOffset(){
    return run_offset;
+}
+
+uint TupleRun::getRunRelativeOffset(){
+  return run_relative_offset;
+}
+
+uint TupleRun::getRunNumber(){
+  return run_number;
 }

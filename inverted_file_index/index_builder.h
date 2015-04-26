@@ -41,15 +41,6 @@ typedef std::vector<Lint> LintVec;
 
 using namespace RICPNS;
 
-// Tuple
-struct tuple_record {
-  uint term_number;
-  uint document_number;
-  uint frequency;
-  uint position;
-
-};
-
 class Index{
 private:
   uint k_;

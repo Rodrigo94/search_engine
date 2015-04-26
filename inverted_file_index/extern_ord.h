@@ -18,7 +18,7 @@ private:
   std::ofstream out_file;
   uint block_size_;
   void Insert(const Tuple& T);
-  void PopSmaller();
+  bool PopSmaller();
 public:
   ExternalSorter(const LintVec& RunsSize, uint block_size, std::string runsFile);
   ~ExternalSorter();

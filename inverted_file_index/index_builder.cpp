@@ -151,6 +151,12 @@ uint Index::dump_tuples(){
   }
   tuples_vector.clear();
   TupleVector(tuples_vector).swap(tuples_vector);
+  //Adding padding bytes:
+  uint padding_bytes_amount = b_ - run_size;
+  Tuple tuple(-1,-1,-1,-1);
+  for(uint i = 0; i<padding_bytes_amount; i++){
+   //tuple.writeTuple(temp);
+  }
   return run_size;
 }
 
