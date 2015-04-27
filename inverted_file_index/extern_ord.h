@@ -4,6 +4,8 @@
 
 #include "index_builder.h"
 #include "tuple.h"
+#include <iostream>
+#include <memory>
 #include <queue>
 
 
@@ -14,10 +16,12 @@ private:
   std::vector<TupleRun> Runs; // This store a vector of vector of tuples (one vector for each run)
   std::string runsDict_;
   std::string runsFile_;
-  std::ifstream runs_file;
+  std::vector<std::shared_ptr<std::ifstream> > runs_file_set;
   std::ofstream out_file;
   uint block_size_;
+  uint out_block_size;
   Lint runs_file_size;
+  IntVec buffer_output;
 public:
   ExternalSorter(const LintVec& RunsSize, uint block_size, std::string runsFile);
   ~ExternalSorter();
@@ -25,6 +29,8 @@ public:
   void ReadOneRun(uint run_number);
   void CreateTupleBlock(uint run_number);
   void Sort();
+  void PushTuple(Tuple tuple);
+  void DumpTupleBuffer();
 };
 
 #endif /* EXTERN_ORD_H_ */

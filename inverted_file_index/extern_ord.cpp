@@ -7,10 +7,13 @@
 ExternalSorter::ExternalSorter(const LintVec& RunsSize, uint block_size, std::string runsFile){
   RunsOffsets = RunsSize; // Runs offsets
   block_size_ = block_size; // Amount of data read
+  out_block_size = MEMORY - block_size*RunsSize.size();
   runsFile_ = runsFile; // File name
-  runs_file.open(runsFile.c_str(), std::ifstream::in | std::ifstream::ate | std::ifstream::binary);
+  buffer_output.clear();
+  std::ifstream runs_file;
+  runs_file.open(runsFile_.c_str(), std::ifstream::in | std::ifstream::ate | std::ifstream::binary);
   runs_file_size = runs_file.tellg();
-  runs_file.seekg(0, runs_file.beg);
+  runs_file.close();
   ReadAllRuns();
   for(uint i = 0; i < Runs.size(); i++){
     Q.push(Runs[i]);
@@ -39,6 +42,13 @@ void ExternalSorter::ReadAllRuns(){
     TupleRun tuple_run(tuple_vec, offset, next_run_offset, block_size_, run_number);
     // Push a vector that will store each run inside the structure 'Runs'
     Runs.push_back(tuple_run);
+
+    std::ifstream run(runsFile_.c_str(), std::ifstream::in | std::ifstream::binary);
+    //run.seekg(offset ,run.beg);
+
+    runs_file_set.push_back(std::make_shared<std::ifstream>(runsFile_.c_str()));
+    runs_file_set[run_number]->seekg(offset, runs_file_set[run_number]->beg);
+
     ReadOneRun(run_number);
     run_number++;
   }
@@ -53,12 +63,13 @@ void ExternalSorter::ReadOneRun(uint run_number){
 
 // Create a tuple block with the tuples read from the file
 void ExternalSorter::CreateTupleBlock(uint run_number){
-  Runs[run_number].ReadMoreData(runs_file);
+  Runs[run_number].ReadMoreData(*runs_file_set[run_number]);
 }
 
 void ExternalSorter::Sort(){
-  int i=0;
   out_file.open("extern_sorting_out", std::ifstream::out | std::ifstream::binary);
+  int i;
+  // While there is elements to pop out of the heap:
   while (!Q.empty()){
 
     // Get the smaller element of the heap
@@ -72,19 +83,16 @@ void ExternalSorter::Sort(){
       break;
     }
 
-    // We remove it from the run (writing it to the outfile)
-    min_tuple_run.PopWrite(out_file);
-    Tuple tu = min_tuple_run.Last();
-
+    // We remove it from the run (writing it to the temporary vector
+    PushTuple(min_tuple_run.First());
+    min_tuple_run.Pop();
 
     // If the run is empty, we try to read more data
     if(min_tuple_run.Empty()){
-      std::cout << "Run:" << min_tuple_run.getRunNumber() << " lida" << std::endl;
+      std::cout << ++i << " runs esvaziadas!" << std::endl;
       // If it has more to read, we read
       if(min_tuple_run.HasMoreToRead()){
-        std::cout << i << " Runs enviadas" << std::endl;
-        i++;
-        min_tuple_run.ReadMoreData(runs_file);
+        min_tuple_run.ReadMoreData(*runs_file_set[min_tuple_run.getRunNumber()]);
         min_tuple_run.IncRelativeOffset();
         Q.push(min_tuple_run);
       } else {
@@ -96,5 +104,28 @@ void ExternalSorter::Sort(){
       Q.push(min_tuple_run);
     }
   }
+  if(buffer_output.size() > 0){
+    DumpTupleBuffer();
+  }
 }
 
+void ExternalSorter::PushTuple(Tuple tuple){
+  uint term_number = tuple.TermNumber();
+  uint doc_number = tuple.DocumentNumber();
+  uint term_frequency = tuple.Frequency();
+  uint term_position = tuple.Position();
+  buffer_output.push_back(term_number);
+  buffer_output.push_back(doc_number);
+  buffer_output.push_back(term_frequency);
+  buffer_output.push_back(term_position);
+  if(buffer_output.size()*4 >= out_block_size){
+    DumpTupleBuffer();
+    buffer_output.clear();
+  }
+}
+
+void ExternalSorter::DumpTupleBuffer(){
+  uint* buffer = &buffer_output[0];
+  out_file.write((char*)buffer, buffer_output.size()*4);
+  std::cout << "Dei um dump" << std::endl;
+}

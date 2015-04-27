@@ -33,12 +33,6 @@ void Tuple::printTuple(){
   std::cout << "<" << TermNumber() << ", " << DocumentNumber() << ", " << Frequency() << ", " << Position() << ">" << std::endl;
 }
 
-void Tuple::writeTuple(std::ofstream& out){
-  out.write((char*)&term_number_, sizeof(uint));
-  out.write((char*)&document_number_, sizeof(uint));
-  out.write((char*)&frequency_, sizeof(uint));
-  out.write((char*)&position_, sizeof(uint));
-}
 
 bool Tuple::sameDocument(Tuple i){
   return this->term_number_ == i.term_number_ && this->document_number_ == i.document_number_;
@@ -71,8 +65,7 @@ Tuple TupleRun::Last(){
   return Run.back();
 }
 
-void TupleRun::PopWrite(std::ofstream& out){
-  Run.front().writeTuple(out);
+void TupleRun::Pop(){
   Run.erase(Run.begin());
 }
 
@@ -86,7 +79,6 @@ bool TupleRun::HasMoreToRead(){
 void TupleRun::ReadMoreData(std::ifstream& file){
   char* buffer = new char[block_size];
   // Set the file to the proper position
-  file.seekg(run_offset+run_relative_offset);
   file.read(buffer, block_size);
   // Create a tuple block with the tuples read from the file
   uint amount_read = 0;
@@ -110,7 +102,7 @@ void TupleRun::ReadMoreData(std::ifstream& file){
 
     amount_read += 4*sizeof(uint);
   }
-  delete[] buffer;
+  //delete[] buffer;
   tuple_vec.swap(Run);
   tuple_vec.clear();
   std::vector<Tuple>(tuple_vec).swap(tuple_vec);

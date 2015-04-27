@@ -42,6 +42,7 @@ void Index::index_documents(){
   while(reader->getNextDocument(doc)) {
 
     // Only for debugging reasons:
+    if(i%1000 == 0)
     std::cout << i << ":" << k_ << ":" << doc.getURL() << std::endl;
 
     // Calls the google's gumbo-parsers
@@ -97,7 +98,7 @@ void Index::index_text(std::string text) {
     word.erase(std::remove_if(word.begin(), word.end(),  std::ptr_fun(is_useless_char) ), word.end());
 
     //'word' is the term we were looking for, but it needs to be greater than size==1.
-    if(word.size() > 1){
+    if(word.size() > 1 && word.size() < 20 && word.find("http") == std::string::npos && word.find("www") == std::string::npos){
       if (vocabulary.count(word) == 0){
         vocabulary[word] = word_count;
         word_count++;
@@ -125,7 +126,6 @@ void Index::index_text(std::string text) {
 void Index::push_tuple(uint term_num, uint doc_num){
   Tuple tuple(index_terms[term_num], doc_num,  word_frequency[index_terms[term_num]], positions[term_num]);
   tuples_vector.push_back(tuple);
-  //std::cout << tuples_vector.size() << std::endl;
   if(tuples_vector.size() >= k_){
     uint run_size = dump_tuples();
     runs_offset += run_size;
@@ -151,28 +151,46 @@ uint Index::dump_tuples(){
   uint run_size = 0;
   RunsOffsetsVector.push_back(runs_offset);
   sort(tuples_vector.begin(), tuples_vector.end(), Tuple::compare());
-  tuples_vector[0].writeTuple(temp);
-  run_size += 4*sizeof(uint);
-  for ( uint i = 1; i < tuples_vector.size(); i++ ) {
-    tuples_vector[i].writeTuple(temp);
-    run_size += 4*sizeof(uint);
+
+  // Buffer that will be stored in memory
+  uint tuple_size = 4*sizeof(uint);
+  char* buffer = new char[tuple_size*tuples_vector.size()];
+  //memset(buffer,1<<30,4*sizeof(uint)*tuples_vector.size());
+
+  for ( uint i = 0; i < tuples_vector.size(); i++ ) {
+    uint term_num = tuples_vector[i].TermNumber();
+    memcpy(buffer + tuple_size*i + 0*sizeof(uint), &term_num,  sizeof(uint));
+
+    uint doc_num = tuples_vector[i].DocumentNumber();
+    memcpy(buffer + tuple_size*i + 1*sizeof(uint), &doc_num,  sizeof(uint));
+
+    uint freq = tuples_vector[i].Frequency();
+    memcpy(buffer + tuple_size*i + 2*sizeof(uint), &freq,  sizeof(uint));
+
+    uint pos = tuples_vector[i].Position();
+    memcpy(buffer + tuple_size*i + 3*sizeof(uint), &pos,  sizeof(uint));
+
+    run_size += tuple_size;
   }
+  temp.write(buffer,run_size);
+  // Delete this vector and the buffer
   tuples_vector.clear();
   TupleVector(tuples_vector).swap(tuples_vector);
+  delete buffer;
+
   //Adding padding bytes:
-  uint padding_bytes_amount = (b_ - (run_size % b_))/(4*sizeof(uint));
-  uint MAX = 1<<30;
-  Tuple tuple(MAX,MAX,MAX,MAX);
-  for(uint i = 0; i<padding_bytes_amount; i++){
-   tuple.writeTuple(temp);
-  }
-  //std::cout << run_size + 4*sizeof(uint)*padding_bytes_amount << std::endl;
-  return run_size + 4*sizeof(uint)*padding_bytes_amount;
+  uint padding_bytes_amount = (b_ - (run_size % b_));
+
+  char* padding = new char[padding_bytes_amount];
+
+  memset(padding,1<<30,padding_bytes_amount);
+  temp.write(padding,padding_bytes_amount);
+
+  delete padding;
+
+  return run_size + tuple_size*padding_bytes_amount;
 }
 
-uint Index::getBlockSize(){
-  return b_;
-}
 
 void Index::dump_vocabulary(){
   std::vector<std::pair<uint, std::string> > dict;
@@ -184,6 +202,7 @@ void Index::dump_vocabulary(){
   std::ofstream dict_out_file("vocabulary");
   for(auto it: dict){
     dict_out_file << it.second;
+    std::cout << it.second << std::endl;
     dict_out_file << "\n";
   }
   dict_out_file.close();
@@ -204,3 +223,7 @@ std::vector<Lint>& Index::getRunsOffsetsVector(){
   return  RunsOffsetsVector;
 }
 
+
+uint Index::getBlockSize(){
+  return b_;
+}

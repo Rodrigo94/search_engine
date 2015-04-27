@@ -19,6 +19,7 @@
 #include <map>
 #include <sstream>
 #include <string>
+#include <string.h>
 #include <vector>
 
 #include "CollectionReader.h"
@@ -74,8 +75,8 @@ public:
   void dump_vocabulary();
   void dump_offsets();
 
-  uint getBlockSize();
   std::vector<Lint>& getRunsOffsetsVector();
+  uint getBlockSize();
 
 };
 

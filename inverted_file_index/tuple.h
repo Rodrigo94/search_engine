@@ -19,7 +19,6 @@ public:
   uint DocumentNumber();
   uint Frequency();
   uint Position();
-  void writeTuple(std::ofstream& out);
   void printTuple();
   bool sameDocument(Tuple i);
   struct compare{
@@ -48,7 +47,7 @@ public:
 
   Tuple First();
   Tuple Last();
-  void PopWrite(std::ofstream& out);
+  void Pop();
   bool HasMoreToRead();
   bool Empty();
 
