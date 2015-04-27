@@ -28,9 +28,8 @@
 #include "tuple.h"
 
 #define MEMORY (40*(1<<20))
-#define w (4*sizeof(int))
-#define INITIAL_RUN_SIZE (50*(1<<10))
-#define NUM_OF_DOCUMENTS 1
+#define w (5*sizeof(uint))
+#define RUN_BLOCK_SIZE (50*(1<<10))
 
 // In order to ease the pain
 typedef std::map<std::string, uint> Vocabulary;
@@ -47,9 +46,7 @@ private:
   uint k_;
   uint b_;
   uint R_;
-  Lint runs_offset;
   std::ofstream temp;
-  std::vector<Lint> RunsOffsetsVector;
 
   CollectionReader * reader;
   Document doc;
@@ -71,11 +68,10 @@ public:
   void index_text(std::string text);
   void push_tuple(uint term_num, uint doc_num);
   void clear_temporaries();
-  uint dump_tuples();
+  void dump_tuples();
   void dump_vocabulary();
-  void dump_offsets();
 
-  std::vector<Lint>& getRunsOffsetsVector();
+  uint getRunsNumber();
   uint getBlockSize();
 
 };

@@ -3,7 +3,7 @@
 // Function that removes useless characters
 bool is_useless_char(uint i){
   //return std::isspace(i) | std::iswblank(i) | std::isdigit(i) | std::ispunct(i) | std::iscntrl(i) ;
-  return !std::isalpha(i);
+  return !std::isalnum(i);
 }
 
 bool pair_compare(const std::pair<uint, std::string>& i, const std::pair<uint, std::string>& j) {
@@ -15,24 +15,16 @@ Index::Index(uint k, uint b, std::string indexFile, std::string inputDir){
   k_ = k;
   b_ = b;
   R_ = 0;
-  runs_offset = 0;
   temp.open("temp", std::ofstream::out | std::ofstream::binary);
   reader = new CollectionReader(inputDir,indexFile);
   reader->getNextDocument(doc);
 }
 
 Index::~Index(){
-
   tuples_vector.clear();
   TupleVector(tuples_vector).swap(tuples_vector);
-
-  dump_vocabulary();
-
   vocabulary.clear();
   Vocabulary(vocabulary).swap(vocabulary);
-
-  dump_offsets();
-
 }
 
 
@@ -42,21 +34,15 @@ void Index::index_documents(){
   while(reader->getNextDocument(doc)) {
 
     // Only for debugging reasons:
-    if(i%1000 == 0)
-    std::cout << i << ":" << k_ << ":" << doc.getURL() << std::endl;
+    //if((i+1)%12000 == 0) break;
 
     // Calls the google's gumbo-parsers
     std::string parser_result = clean_html(doc.getText());
     doc.clear();
 
-
     index_text(parser_result);
     parser_result.clear();
     std::string(parser_result).swap(parser_result);
-
-    // Updates the memory available memory to dump the tuples:
-    k_ = (MEMORY - vocabulary.size())/w;
-
 
     // Create tuples:
     for(uint j = 0; j < index_terms.size(); j++){
@@ -124,16 +110,12 @@ void Index::index_text(std::string text) {
 
 
 void Index::push_tuple(uint term_num, uint doc_num){
-  Tuple tuple(index_terms[term_num], doc_num,  word_frequency[index_terms[term_num]], positions[term_num]);
+  Tuple tuple(index_terms[term_num], doc_num,  word_frequency[index_terms[term_num]], positions[term_num], R_);
   tuples_vector.push_back(tuple);
   if(tuples_vector.size() >= k_){
-    uint run_size = dump_tuples();
-    runs_offset += run_size;
+    dump_tuples();
     clear_temporaries();
     R_++;
-    if ( b_*(R_ + 1) > MEMORY ) {
-      b_ = b_ / 2;
-    }
   }
 }
 
@@ -147,48 +129,35 @@ void Index::clear_temporaries(){
 }
 
 // Dumps the vector of tuples into the outfile
-uint Index::dump_tuples(){
-  uint run_size = 0;
-  RunsOffsetsVector.push_back(runs_offset);
+void Index::dump_tuples(){
   sort(tuples_vector.begin(), tuples_vector.end(), Tuple::compare());
 
   // Buffer that will be stored in memory
-  uint tuple_size = 4*sizeof(uint);
-  char* buffer = new char[tuple_size*tuples_vector.size()];
-  //memset(buffer,1<<30,4*sizeof(uint)*tuples_vector.size());
+  char* buffer = new char[MEMORY];
+  memset(buffer,char(255),MEMORY);
 
   for ( uint i = 0; i < tuples_vector.size(); i++ ) {
     uint term_num = tuples_vector[i].TermNumber();
-    memcpy(buffer + tuple_size*i + 0*sizeof(uint), &term_num,  sizeof(uint));
+    memcpy(buffer + w*i + 0*sizeof(uint), &term_num,  sizeof(uint));
 
     uint doc_num = tuples_vector[i].DocumentNumber();
-    memcpy(buffer + tuple_size*i + 1*sizeof(uint), &doc_num,  sizeof(uint));
+    memcpy(buffer + w*i + 1*sizeof(uint), &doc_num,  sizeof(uint));
 
     uint freq = tuples_vector[i].Frequency();
-    memcpy(buffer + tuple_size*i + 2*sizeof(uint), &freq,  sizeof(uint));
+    memcpy(buffer + w*i + 2*sizeof(uint), &freq,  sizeof(uint));
 
     uint pos = tuples_vector[i].Position();
-    memcpy(buffer + tuple_size*i + 3*sizeof(uint), &pos,  sizeof(uint));
+    memcpy(buffer + w*i + 3*sizeof(uint), &pos,  sizeof(uint));
 
-    run_size += tuple_size;
+    uint run = tuples_vector[i].RunNumber();
+    memcpy(buffer + w*i + 4*sizeof(uint), &run,  sizeof(uint));
+
   }
-  temp.write(buffer,run_size);
+  temp.write(buffer,MEMORY);
   // Delete this vector and the buffer
   tuples_vector.clear();
   TupleVector(tuples_vector).swap(tuples_vector);
   delete buffer;
-
-  //Adding padding bytes:
-  uint padding_bytes_amount = (b_ - (run_size % b_));
-
-  char* padding = new char[padding_bytes_amount];
-
-  memset(padding,1<<30,padding_bytes_amount);
-  temp.write(padding,padding_bytes_amount);
-
-  delete padding;
-
-  return run_size + tuple_size*padding_bytes_amount;
 }
 
 
@@ -202,7 +171,6 @@ void Index::dump_vocabulary(){
   std::ofstream dict_out_file("vocabulary");
   for(auto it: dict){
     dict_out_file << it.second;
-    std::cout << it.second << std::endl;
     dict_out_file << "\n";
   }
   dict_out_file.close();
@@ -210,19 +178,9 @@ void Index::dump_vocabulary(){
   std::vector<std::pair<uint, std::string> >(dict).swap(dict);
 }
 
-void Index::dump_offsets() {
-  std::ofstream offset_out_file;
-  offset_out_file.open("offsets", std::ifstream::out | std::ifstream::binary);
-  for(auto it: RunsOffsetsVector){
-    offset_out_file.write((char*)&it, sizeof(long long int));
-  }
-  offset_out_file.close();
+uint Index::getRunsNumber() {
+  return R_;
 }
-
-std::vector<Lint>& Index::getRunsOffsetsVector(){
-  return  RunsOffsetsVector;
-}
-
 
 uint Index::getBlockSize(){
   return b_;

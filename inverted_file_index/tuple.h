@@ -5,6 +5,9 @@
 #include <fstream>
 #include <vector>
 
+#define MEM_SIZE (40*(1<<20))
+#define tuple_size (5*sizeof(uint))
+#define BLOCK_SIZE (50*(1<<10))
 
 class Tuple{
 private:
@@ -12,15 +15,19 @@ private:
   uint document_number_;
   uint frequency_;
   uint position_;
+  uint run_number_;
 public:
-  Tuple(uint term_number, uint document_number, uint frequency, uint position);
+  Tuple(uint term_number, uint document_number, uint frequency, uint position, uint run_number);
   ~Tuple();
+
   uint TermNumber();
   uint DocumentNumber();
   uint Frequency();
   uint Position();
+  uint RunNumber();
+
   void printTuple();
-  bool sameDocument(Tuple i);
+
   struct compare{
     bool operator()(const Tuple& i, const Tuple& j){
       if ( i.term_number_ != j.term_number_ )
@@ -30,19 +37,26 @@ public:
       return (i.position_ < j.position_);
     }
   };
+
+  struct inverse_compare{
+    bool operator()(const Tuple& i, const Tuple& j){
+      if ( i.term_number_ != j.term_number_ )
+        return (i.term_number_ > j.term_number_);
+      if ( i.document_number_ != j.document_number_)
+        return (i.document_number_ > j.document_number_);
+      return (i.position_ > j.position_);
+    }
+  };
 };
 
 
 class TupleRun{
 private:
   std::vector<Tuple> Run;
-  long long int run_offset;
-  long long int next_run_offset;
   uint run_relative_offset;
-  uint block_size;
   uint run_number;
 public:
-  TupleRun(std::vector<Tuple>& Run, long long int run_offset, long long int next_run_offset, uint block_size, uint run_number);
+  TupleRun(std::vector<Tuple>& Run, uint run_number);
   ~TupleRun();
 
   Tuple First();
@@ -52,25 +66,13 @@ public:
   bool Empty();
 
   void IncRelativeOffset();
-  void InsertTupleVec(std::vector<Tuple>& tuple_vec);
 
   uint getRunNumber();
-  uint getRunRelativeOffset();
-  long long int getRunOffset();
 
   void ReadMoreData(std::ifstream& file);
 
   void DeleteRun();
 
-  struct compare_vector {
-    bool operator() (TupleRun& i, TupleRun& j){
-      if ( i.Run.front().TermNumber() != j.Run.front().TermNumber())
-        return (i.Run.front().TermNumber() > j.Run.front().TermNumber());
-      if ( i.Run.front().DocumentNumber() != j.Run.front().DocumentNumber())
-        return (i.Run.front().DocumentNumber() > j.Run.front().DocumentNumber());
-      return (i.Run.front().Position() > j.Run.front().Position());
-    }
-  };
 };
 
 

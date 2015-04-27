@@ -2,11 +2,12 @@
 
 
 
-Tuple::Tuple(uint term_number, uint document_number, uint frequency, uint position){
+Tuple::Tuple(uint term_number, uint document_number, uint frequency, uint position, uint run_number){
   term_number_ = term_number;
   document_number_ = document_number;
   frequency_ = frequency;
   position_ = position;
+  run_number_ = run_number;
 }
 
 Tuple::~Tuple(){
@@ -29,14 +30,14 @@ uint Tuple::Position(){
   return position_;
 }
 
+uint Tuple::RunNumber(){
+  return run_number_;
+}
+
 void Tuple::printTuple(){
-  std::cout << "<" << TermNumber() << ", " << DocumentNumber() << ", " << Frequency() << ", " << Position() << ">" << std::endl;
+  std::cout << "<" << TermNumber() << ", " << DocumentNumber() << ", " << Frequency() << ", " << Position() << ", " << RunNumber() << ">" << std::endl;
 }
 
-
-bool Tuple::sameDocument(Tuple i){
-  return this->term_number_ == i.term_number_ && this->document_number_ == i.document_number_;
-}
 
 /*
  * ************************************************************************************************
@@ -44,12 +45,9 @@ bool Tuple::sameDocument(Tuple i){
  * ************************************************************************************************
  */
 
-TupleRun::TupleRun(std::vector<Tuple>& Run, long long int run_offset, long long int next_run_offset, uint block_size, uint run_number){
+TupleRun::TupleRun(std::vector<Tuple>& Run, uint run_number){
   this->Run = Run;
-  this->run_offset = run_offset;
-  this->block_size = block_size;
   this->run_number = run_number;
-  this->next_run_offset = next_run_offset;
   run_relative_offset = 0;
 }
 
@@ -70,68 +68,52 @@ void TupleRun::Pop(){
 }
 
 bool TupleRun::HasMoreToRead(){
-  if(run_offset + run_relative_offset == next_run_offset){
+  if(run_relative_offset  >= MEM_SIZE){
     return false;
   }
   return true;
 }
 
 void TupleRun::ReadMoreData(std::ifstream& file){
-  char* buffer = new char[block_size];
+  char* buffer = new char[BLOCK_SIZE];
   // Set the file to the proper position
-  file.read(buffer, block_size);
+  file.read(buffer, BLOCK_SIZE);
   // Create a tuple block with the tuples read from the file
   uint amount_read = 0;
   std::vector<Tuple> tuple_vec;
-  while(amount_read < block_size){
+  while(amount_read < BLOCK_SIZE){
     uint term_number;
     uint doc_number;
     uint term_frequency;
     uint term_position;
+    uint run_number;
 
-    std::copy(&buffer[amount_read], &buffer[amount_read] + sizeof(uint), reinterpret_cast<char*>(&term_number));
-    if(int(term_number) < 0) break; // If we reach the padding bytes
-
-    std::copy(&buffer[amount_read] + sizeof(uint), &buffer[amount_read] + 2*sizeof(uint), reinterpret_cast<char*>(&doc_number));
+    // Copy a buffer of a tuple size in order to create a tuple
+    std::copy(&buffer[amount_read] + 0*sizeof(uint), &buffer[amount_read] + 1*sizeof(uint), reinterpret_cast<char*>(&term_number));
+    std::copy(&buffer[amount_read] + 1*sizeof(uint), &buffer[amount_read] + 2*sizeof(uint), reinterpret_cast<char*>(&doc_number));
     std::copy(&buffer[amount_read] + 2*sizeof(uint), &buffer[amount_read] + 3*sizeof(uint), reinterpret_cast<char*>(&term_frequency));
     std::copy(&buffer[amount_read] + 3*sizeof(uint), &buffer[amount_read] + 4*sizeof(uint), reinterpret_cast<char*>(&term_position));
+    std::copy(&buffer[amount_read] + 4*sizeof(uint), &buffer[amount_read] + 5*sizeof(uint), reinterpret_cast<char*>(&run_number));
 
-    Tuple tuple(term_number, doc_number, term_frequency, term_position);
-    //tuple.printTuple();
+    Tuple tuple(term_number, doc_number, term_frequency, term_position, run_number);
     tuple_vec.push_back(tuple);
 
-    amount_read += 4*sizeof(uint);
+    amount_read += tuple_size;
   }
-  //delete[] buffer;
+  delete[] buffer;
   tuple_vec.swap(Run);
   tuple_vec.clear();
   std::vector<Tuple>(tuple_vec).swap(tuple_vec);
 }
 
 void TupleRun::IncRelativeOffset(){
-  run_relative_offset += block_size;
+  run_relative_offset += BLOCK_SIZE;
 }
 
 bool TupleRun::Empty(){
   return Run.empty();
 }
 
-
-void TupleRun::InsertTupleVec(std::vector<Tuple>& tuple_vec){
-  tuple_vec.swap(Run);
-}
-
- long long int TupleRun::getRunOffset(){
-   return run_offset;
-}
-
-uint TupleRun::getRunRelativeOffset(){
-  return run_relative_offset;
-}
-
-uint TupleRun::getRunNumber(){
-  return run_number;
-}
 
 void TupleRun::DeleteRun(){
   Run.clear();
