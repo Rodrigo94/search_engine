@@ -75,6 +75,7 @@ bool TupleRun::HasMoreToRead(){
 }
 
 void TupleRun::ReadMoreData(std::ifstream& file){
+  uint j=0;
   char* buffer = new char[BLOCK_SIZE];
   // Set the file to the proper position
   file.read(buffer, BLOCK_SIZE);
@@ -86,14 +87,14 @@ void TupleRun::ReadMoreData(std::ifstream& file){
     uint doc_number;
     uint term_frequency;
     uint term_position;
-    uint run_number;
+    uint run;
 
     // Copy a buffer of a tuple size in order to create a tuple
     std::copy(&buffer[amount_read] + 0*sizeof(uint), &buffer[amount_read] + 1*sizeof(uint), reinterpret_cast<char*>(&term_number));
     std::copy(&buffer[amount_read] + 1*sizeof(uint), &buffer[amount_read] + 2*sizeof(uint), reinterpret_cast<char*>(&doc_number));
     std::copy(&buffer[amount_read] + 2*sizeof(uint), &buffer[amount_read] + 3*sizeof(uint), reinterpret_cast<char*>(&term_frequency));
     std::copy(&buffer[amount_read] + 3*sizeof(uint), &buffer[amount_read] + 4*sizeof(uint), reinterpret_cast<char*>(&term_position));
-    std::copy(&buffer[amount_read] + 4*sizeof(uint), &buffer[amount_read] + 5*sizeof(uint), reinterpret_cast<char*>(&run_number));
+    std::copy(&buffer[amount_read] + 4*sizeof(uint), &buffer[amount_read] + 5*sizeof(uint), reinterpret_cast<char*>(&run));
 
     Tuple tuple(term_number, doc_number, term_frequency, term_position, run_number);
     tuple_vec.push_back(tuple);

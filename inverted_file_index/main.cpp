@@ -37,53 +37,43 @@ int main(int argc, char* argv[]) {
 
   std::cout << "Extern sorting starts:" << std::endl;
   display_time();
-  ExternalSorter extern_sorter;
-  extern_sorter.Sort();
+  //ExternalSorter extern_sorter;
+  //extern_sorter.Sort();
   std::cout << "Extern sorting stops:" << std::endl;
   display_time();
 
-  /*std::ifstream file("extern_sorting_out", std::ifstream::out | std::ifstream::binary);
-  uint SIZE = 50000000;
-  char* buffer = new char[SIZE];
+  /*std::ifstream file("temp_bk", std::ifstream::in | std::ifstream::binary);
+  //uint SIZE = 50000000;
+  char* buffer = new char[4];
     // Set the file to the proper position
-    std::cout << "Tento dar o read nesse bloco enorme" << std::endl;
-    file.read(buffer, SIZE);
-    std::cout << "Deveras consegui" << std::endl;
+  uint previous_term_number = 0;
+  while(1){
+    file.read(buffer, 4);
     // Create a tuple block with the tuples read from the file
-    uint amount_read = 0;
+
     //std::vector<Tuple> tuple_vec;
-    std::cout << "Transfiro esse bloco pra tupla" << std::endl;
     uint i=0;
-    while(amount_read < SIZE){
-      uint term_number;
-      uint doc_number;
-      uint term_frequency;
-      uint term_position;
-      uint run;
+    uint term_number;
+    uint doc_number;
+    uint term_frequency;
+    uint term_position;
 
-      std::copy(&buffer[amount_read], &buffer[amount_read] + sizeof(uint), reinterpret_cast<char*>(&term_number));
-      if(int(term_number) < 0) break; // If we reach the padding bytes
+    // Copy a buffer of a tuple size in order to create a tuple
+    std::copy(&buffer[0] + 0*sizeof(uint), &buffer[0] + 1*sizeof(uint), reinterpret_cast<char*>(&term_number));
+    //std::copy(&buffer[0] + 1*sizeof(uint), &buffer[0] + 2*sizeof(uint), reinterpret_cast<char*>(&doc_number));
+    //std::copy(&buffer[0] + 2*sizeof(uint), &buffer[0] + 3*sizeof(uint), reinterpret_cast<char*>(&term_frequency));
+    //std::copy(&buffer[0] + 3*sizeof(uint), &buffer[0] + 4*sizeof(uint), reinterpret_cast<char*>(&term_position));
 
-      std::copy(&buffer[amount_read] + sizeof(uint), &buffer[amount_read] + 2*sizeof(uint), reinterpret_cast<char*>(&doc_number));
-      std::copy(&buffer[amount_read] + 2*sizeof(uint), &buffer[amount_read] + 3*sizeof(uint), reinterpret_cast<char*>(&term_frequency));
-      std::copy(&buffer[amount_read] + 3*sizeof(uint), &buffer[amount_read] + 4*sizeof(uint), reinterpret_cast<char*>(&term_position));
-      std::copy(&buffer[amount_read] + 4*sizeof(uint), &buffer[amount_read] + 5*sizeof(uint), reinterpret_cast<char*>(&run));
+    std::cout << term_number << std::endl;
 
-      Tuple tuple(term_number, doc_number, term_frequency, term_position, run);
+    //Tuple tuple(term_number, doc_number, term_frequency, term_position, 0);
 
-      //if(doc_number == 12)
-      tuple.printTuple();
-      //tuple_vec.push_back(tuple);
 
-      i++;
-      amount_read += w;
-    }
-    std::cout << "Transferi.. e bom deletar o buffer" << std::endl;
-    delete[] buffer;
-    std::cout << "Deletei" << std::endl;
-    //tuple_vec.swap(Run);
-    //tuple_vec.clear();
-    //std::vector<Tuple>(tuple_vec).swap(tuple_vec);*/
+    //tuple.printTuple();
+
+    //i++;
+
+  }*/
 
   return 0;
 }

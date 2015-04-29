@@ -5,7 +5,7 @@
 #include <fstream>
 #include <vector>
 
-#define MEM_SIZE (40*(1<<20))
+#define MEM_SIZE (40*(1<<20) - 40*(1<<20)%BLOCK_SIZE)
 #define tuple_size (5*sizeof(uint))
 #define BLOCK_SIZE (50*(1<<10))
 

@@ -51,6 +51,7 @@ void Index::index_documents(){
     clear_temporaries();
     i++;
   }
+  // Just in case we still got more tuples (almost unlike)
   dump_tuples();
   if(temp.is_open()){
     temp.close();
@@ -84,7 +85,7 @@ void Index::index_text(std::string text) {
     word.erase(std::remove_if(word.begin(), word.end(),  std::ptr_fun(is_useless_char) ), word.end());
 
     //'word' is the term we were looking for, but it needs to be greater than size==1.
-    if(word.size() > 1 && word.size() < 20 && word.find("http") == std::string::npos && word.find("www") == std::string::npos){
+    if(word.size() > 1 && word.size() < 20){
       if (vocabulary.count(word) == 0){
         vocabulary[word] = word_count;
         word_count++;
@@ -113,8 +114,8 @@ void Index::push_tuple(uint term_num, uint doc_num){
   Tuple tuple(index_terms[term_num], doc_num,  word_frequency[index_terms[term_num]], positions[term_num], R_);
   tuples_vector.push_back(tuple);
   if(tuples_vector.size() >= k_){
+    tuples_vector[12].printTuple();
     dump_tuples();
-    clear_temporaries();
     R_++;
   }
 }
@@ -134,7 +135,6 @@ void Index::dump_tuples(){
 
   // Buffer that will be stored in memory
   char* buffer = new char[MEMORY];
-  memset(buffer,char(255),MEMORY);
 
   for ( uint i = 0; i < tuples_vector.size(); i++ ) {
     uint term_num = tuples_vector[i].TermNumber();

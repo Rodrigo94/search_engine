@@ -7,7 +7,7 @@
 ExternalSorter::ExternalSorter(){
   // Get the size of runs file
   std::ifstream runs_file;
-  runs_file.open("temp", std::ifstream::in | std::ifstream::ate | std::ifstream::binary);
+  runs_file.open("temp_bk", std::ifstream::in | std::ifstream::ate | std::ifstream::binary);
   runs_file_size = runs_file.tellg();
   runs_file.close();
 
@@ -17,7 +17,6 @@ ExternalSorter::ExternalSorter(){
   ReadAllRuns();
   for(uint i = 0; i < Runs.size(); i++){
     Q.push(Runs[i].First());
-    Runs[i].Pop();
   }
 
   amount_dumped = 0;
@@ -29,19 +28,16 @@ ExternalSorter::~ExternalSorter(){
 
 // Starting function, read every run with relatives offsets equal to 0
 void ExternalSorter::ReadAllRuns(){
-  uint run_number = 0;
-  for(uint i=0; i<num_of_runs; i++){
+  for(Lint i=0; i<num_of_runs; i++){
     // Read the i'th run from the file
     TupleVector tuple_vec;
-    TupleRun tuple_run(tuple_vec, run_number);
+    TupleRun tuple_run(tuple_vec, i);
     // Push a vector that will store each run inside the structure 'Runs'
     Runs.push_back(tuple_run);
 
-    runs_file_set.push_back(std::make_shared<std::ifstream>("temp"));
-    runs_file_set[run_number]->seekg(i*MEMORY, runs_file_set[run_number]->beg);
-
-    ReadOneRun(run_number);
-    run_number++;
+    runs_file_set.push_back(std::make_shared<std::ifstream>("temp_bk"));
+    runs_file_set[i]->seekg(i*MEMORY, runs_file_set[i]->beg);
+    ReadOneRun(i);
   }
 }
 
@@ -68,12 +64,6 @@ void ExternalSorter::Sort(){
     uint min_tuple_run_number = min_tuple.RunNumber();
     // Remove it from the heap
     Q.pop();
-    // I fill the padding bytes with 1 billion.. Since it is 'impossible' to reach that
-    // number of terms
-    if(min_tuple.TermNumber() >= uint(1<<30)){
-      //std::cout << "Brekou" << std::endl;
-      break;
-    }
 
     // We remove it from the run (writing it to the temporary vector
     PushTuple(min_tuple);
@@ -105,13 +95,12 @@ void ExternalSorter::PushTuple(Tuple tuple){
   uint doc_number = tuple.DocumentNumber();
   uint term_frequency = tuple.Frequency();
   uint term_position = tuple.Position();
-  uint run_number = tuple.RunNumber();
   buffer_output.push_back(term_number);
   buffer_output.push_back(doc_number);
   buffer_output.push_back(term_frequency);
   buffer_output.push_back(term_position);
-  buffer_output.push_back(run_number);
   if(buffer_output.size()*sizeof(uint) >= MEMORY){
+    std::cout << buffer_output[0] << "," << buffer_output[1] << "," << buffer_output[2] << "," << buffer_output[3] << std::endl;
     DumpTupleBuffer();
     buffer_output.clear();
   }
@@ -121,5 +110,5 @@ void ExternalSorter::DumpTupleBuffer(){
   uint* buffer = &buffer_output[0];
   out_file.write((char*)buffer, MEMORY);
   amount_dumped += MEMORY;
-  std::cout << "Total dumped: " << 100*amount_dumped/runs_file_size << "\%" << std::endl;
+  std::cout << "Total dumped: " << 125*amount_dumped/runs_file_size << "\%" << std::endl;
 }

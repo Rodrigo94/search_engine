@@ -27,7 +27,7 @@
 #include "../test_functions/display_index.h"
 #include "tuple.h"
 
-#define MEMORY (40*(1<<20))
+#define MEMORY (40*(1<<20) - 40*(1<<20)%BLOCK_SIZE)
 #define w (5*sizeof(uint))
 #define RUN_BLOCK_SIZE (50*(1<<10))
 
