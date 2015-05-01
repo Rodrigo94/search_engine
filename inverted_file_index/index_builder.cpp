@@ -33,9 +33,6 @@ void Index::index_documents(){
   // Reads the document:
   while(reader->getNextDocument(doc)) {
 
-    // Only for debugging reasons:
-    //if((i+1)%12000 == 0) break;
-
     // Calls the google's gumbo-parsers
     std::string parser_result = clean_html(doc.getText());
     doc.clear();

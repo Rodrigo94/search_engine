@@ -59,10 +59,6 @@ Tuple TupleRun::First(){
   return Run.front();
 }
 
-Tuple TupleRun::Last(){
-  return Run.back();
-}
-
 void TupleRun::Pop(){
   Run.erase(Run.begin());
 }
@@ -74,11 +70,11 @@ bool TupleRun::HasMoreToRead(){
   return true;
 }
 
-void TupleRun::ReadMoreData(std::ifstream& file){
-  uint j=0;
+void TupleRun::ReadBlockOfData(std::ifstream& file){
   char* buffer = new char[BLOCK_SIZE];
   // Set the file to the proper position
   file.read(buffer, BLOCK_SIZE);
+  this->run_relative_offset += BLOCK_SIZE;
   // Create a tuple block with the tuples read from the file
   uint amount_read = 0;
   std::vector<Tuple> tuple_vec;
@@ -105,10 +101,6 @@ void TupleRun::ReadMoreData(std::ifstream& file){
   tuple_vec.swap(Run);
   tuple_vec.clear();
   std::vector<Tuple>(tuple_vec).swap(tuple_vec);
-}
-
-void TupleRun::IncRelativeOffset(){
-  run_relative_offset += BLOCK_SIZE;
 }
 
 bool TupleRun::Empty(){

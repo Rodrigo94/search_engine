@@ -60,16 +60,13 @@ public:
   ~TupleRun();
 
   Tuple First();
-  Tuple Last();
   void Pop();
   bool HasMoreToRead();
   bool Empty();
 
-  void IncRelativeOffset();
-
   uint getRunNumber();
 
-  void ReadMoreData(std::ifstream& file);
+  void ReadBlockOfData(std::ifstream& file);
 
   void DeleteRun();
 
