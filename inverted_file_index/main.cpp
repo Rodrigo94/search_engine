@@ -79,16 +79,15 @@ int main(int argc, char* argv[]) {
   //std::string path = "/home/rodrigo/Devel/search_engine/";
   //QueryProcessor Q(path+"extern_sorting_out");
   //Q.process_vocabulary(path+"vocabulary");
-  //Q.process_query("casa");
+  //Q.process_query("nivio ziviani professor");
 
-  //<1155,440228,4,2727>
-  CollectionReader * reader;
+  /*CollectionReader * reader;
   Document doc;
   reader = new CollectionReader(inputDir,indexFile);
   reader->getNextDocument(doc);
   int i=0;
   while(reader->getNextDocument(doc)) {
-    if(i!=440228) {i++;continue;}
+    if(i!=715751) {i++;continue;}
     i++;
      // Calls the google's gumbo-parsers
      std::string parser_result = clean_html(doc.getText());
@@ -96,7 +95,7 @@ int main(int argc, char* argv[]) {
 
      std::cout << parser_result << std::endl;
 
-   }
+   }*/
 
   return 0;
 }
