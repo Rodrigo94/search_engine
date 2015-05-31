@@ -1,3 +1,9 @@
+/*
+ * Tuple
+ * This is a simple class that manages tuples.
+ *
+ */
+
 #ifndef TUPLE_H_
 #define TUPLE_H_
 
@@ -49,7 +55,12 @@ public:
   };
 };
 
-
+// This class manages a run of tuples. It is capable of:
+// - Store a vector of tuples
+// - Store its number
+// - Store its offset from the start of the run
+// - Read blocks of BLOCK_SIZE from a file;
+// - Take the first tuple in a run
 class TupleRun{
 private:
   std::vector<Tuple> Run;
@@ -58,18 +69,13 @@ private:
 public:
   TupleRun(std::vector<Tuple>& Run, uint run_number);
   ~TupleRun();
-
-  Tuple First();
-  void Pop();
-  bool HasMoreToRead();
-  bool Empty();
-
-  uint getRunNumber();
-
-  void ReadBlockOfData(std::ifstream& file);
-
+  Tuple First(); // Return the first tuple
+  void Pop(); // Remove the first tuple
+  bool HasMoreToRead(); // If we have already read MEMORY amount of tuples
+  bool Empty(); // Is it empty?
+  uint getRunNumber(); // Getter
+  void ReadBlockOfData(std::ifstream& file); // Reads BLOCK_SIZE of data from 'file'
   void DeleteRun();
-
 };
 
 

@@ -1,13 +1,14 @@
 /*
  * Index Builder
- * Input: A clean text
- * Output: A dictionary that maps the frequency of each word in the text
+ * This class must be able to read the collection given and create a index for it
+ * The memory cap is 40*(1<<20) - 40*(1<<20)%RUN_BLOCK_SIZE where RUN_BLOCK_SIZE is 50kbytes
+ * The - 40*(1<<20)%RUN_BLOCK_SIZE is in order to fit a exact amount of blocks of 50kbytes in MEMORy
  *
- * Each word in the text is converted to lower case.
+ * Usage
+ * Construct the index builder with Index( std::string indexFile, std::string inputDir) passing the index file and collection directories as parameters
+ * Then call index_documents(). It will spit the file "temp" that will have a set of ordered runs. This file will be the input for the external sorter.
  *
- * This parser ignores whitespaces, punctuations and special characters.
  */
-
 
 #ifndef INDEX_BUILDER_H_
 #define INDEX_BUILDER_H_
@@ -24,11 +25,10 @@
 
 #include "CollectionReader.h"
 #include "clean_text.h"
-#include "../test_functions/display_index.h"
 #include "tuple.h"
 
-#define MEMORY (40*(1<<20) - 40*(1<<20)%BLOCK_SIZE)
-#define w (5*sizeof(uint))
+#define MEMORY (40*(1<<20) - 40*(1<<20)%RUN_BLOCK_SIZE)
+#define TUPLE_SIZE (5*sizeof(uint))
 #define RUN_BLOCK_SIZE (50*(1<<10))
 
 // In order to ease the pain
@@ -43,40 +43,17 @@ using namespace RICPNS;
 
 class Index{
 private:
-  uint k_;
-  uint b_;
-  uint R_;
   std::ofstream temp;
-
   CollectionReader * reader;
   Document doc;
-
-  // These two are persistent
-  TupleVector tuples_vector;
   Vocabulary vocabulary;
-
-  // These three can be removed from memory over time. They are temporary.
-  IntVec index_terms;
-  IntVec positions;
-  IntIntMap word_frequency;
-
-public:
-  Index(uint k, uint b, std::string indexFile, std::string inputDir);
-  ~Index();
-
-  void index_documents();
-  void index_text(std::string text);
-  void push_tuple(uint term_num, uint doc_num);
-  void clear_temporaries();
-  void dump_tuples();
+  void dump_tuples(TupleVector& tuples_vector);
   void dump_vocabulary();
-
-  uint getRunsNumber();
-  uint getBlockSize();
-
+  void index_text(std::string& text, IntVec& indexed_terms, IntIntMap& frequencies, IntVec& positions);
+public:
+  Index(std::string indexFile, std::string inputDir);
+  ~Index();
+  void index_documents();
 };
-
-
-
 
 #endif /* INDEX_BUILDER_H_ */

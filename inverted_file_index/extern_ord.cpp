@@ -4,10 +4,11 @@
 // RunsSize is a list of Runs offsets inside the tuples file
 // block_size is the amount of data we will read every time
 // runsFile is the name of the file that we stored the runs
-ExternalSorter::ExternalSorter(){
+ExternalSorter::ExternalSorter(std::string runs_file_name){
+  std::cout << "Extern sorting starts..." << std::endl;
   // Get the size of runs file
   std::ifstream runs_file;
-  runs_file.open("temp", std::ifstream::in | std::ifstream::ate | std::ifstream::binary);
+  runs_file.open(runs_file_name.c_str(), std::ifstream::in | std::ifstream::ate | std::ifstream::binary);
   runs_file_size = runs_file.tellg();
   runs_file.close();
 
@@ -30,75 +31,50 @@ ExternalSorter::ExternalSorter(){
     runs_file_set.push_back(std::make_shared<std::ifstream>("temp"));
     runs_file_set[i]->seekg(i*MEMORY, runs_file_set[i]->beg);
 
+    // Each run read a block of data
     Runs[i].ReadBlockOfData(*runs_file_set[i]);
 
     // Set up the priority queue with the initial block of each run
     Q.push(Runs[i].First());
   }
-
   amount_dumped = 0;
+  // Do the sorting
+  Sort();
+  std::cout << "Extern sorting stops!" << std::endl;
 }
 
 ExternalSorter::~ExternalSorter(){
 
 }
 
-/*// Starting function, read every run with relatives offsets equal to 0
-void ExternalSorter::ReadAllRuns(){
-  for(Lint i=0; i<num_of_runs; i++){
-    // Read the i'th run from the file
-    TupleVector tuple_vec;
-    TupleRun tuple_run(tuple_vec, i);
-    // Push a vector that will store each run inside the structure 'Runs'
-    Runs.push_back(tuple_run);
-
-    runs_file_set.push_back(std::make_shared<std::ifstream>("temp_bk"));
-    runs_file_set[i]->seekg(i*MEMORY, runs_file_set[i]->beg);
-    ReadOneRun(i);
-  }
-}
-
-// Read an arbitrary run from the file
-void ExternalSorter::ReadOneRun(uint run_number){
-  // Create a tuple block with the tuples read from the file
-  CreateTupleBlock(run_number);
-  Runs[run_number].IncRelativeOffset();
-}
-
-// Create a tuple block with the tuples read from the file
-void ExternalSorter::CreateTupleBlock(uint run_number){
-  Runs[run_number].ReadMoreData(*runs_file_set[run_number]);
-}*/
-
 void ExternalSorter::Sort(){
   out_file.open("extern_sorting_out", std::ifstream::out | std::ifstream::binary);
   // While there is elements to pop out of the heap:
-  std::cout << "Extern Sorting:" << std::endl;
   while (!Q.empty()){
 
     // Get the smaller element of the heap
     Tuple min_tuple = Q.top();
-    uint min_tuple_run_number = min_tuple.RunNumber();
+    uint i = min_tuple.RunNumber();
     // Remove it from the heap
     Q.pop();
 
     // We remove it from the run (writing it to the temporary vector
     PushTuple(min_tuple);
-    Runs[min_tuple_run_number].Pop();
+    Runs[i].Pop();
 
     // If the run is empty, we try to read more data
-    if(Runs[min_tuple_run_number].Empty()){
+    if(Runs[i].Empty()){
       // If it has more to read, we read
-      if(Runs[min_tuple_run_number].HasMoreToRead()){
-        Runs[min_tuple_run_number].ReadBlockOfData(*runs_file_set[min_tuple_run_number]);
-        Q.push(Runs[min_tuple_run_number].First());
+      if(Runs[i].HasMoreToRead()){
+        Runs[i].ReadBlockOfData(*runs_file_set[i]);
+        Q.push(Runs[i].First());
       } else {
         // We are done with this run
       }
     } else {
       // We give the heap the same run without the first element.
       // So the heap can merge again.
-      Q.push(Runs[min_tuple_run_number].First());
+      Q.push(Runs[i].First());
     }
   }
   if(buffer_output.size() > 0){
@@ -116,15 +92,14 @@ void ExternalSorter::PushTuple(Tuple tuple){
   buffer_output.push_back(term_frequency);
   buffer_output.push_back(term_position);
   if(buffer_output.size()*sizeof(uint) >= MEMORY){
-    std::cout << buffer_output[0] << "," << buffer_output[1] << "," << buffer_output[2] << "," << buffer_output[3] << std::endl;
     DumpTupleBuffer();
     buffer_output.clear();
   }
 }
 
+// Dumps a MEMORY amount of data into the output file
 void ExternalSorter::DumpTupleBuffer(){
   uint* buffer = &buffer_output[0];
   out_file.write((char*)buffer, MEMORY);
   amount_dumped += MEMORY;
-  std::cout << "Total dumped: " << 125*amount_dumped/runs_file_size << "\%" << std::endl;
 }

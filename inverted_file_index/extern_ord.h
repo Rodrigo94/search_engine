@@ -19,15 +19,12 @@ private:
   uint num_of_runs;
   Lint runs_file_size; // File size from where we are gonna read our runs
   Lint amount_dumped; //Keeps track of the amount of data dumped to the outbug. A debug tool.
-public:
-  ExternalSorter();
-  ~ExternalSorter();
-  void ReadAllRuns();
-  void ReadOneRun(uint run_number);
-  void CreateTupleBlock(uint run_number);
   void Sort();
   void PushTuple(Tuple tuple);
   void DumpTupleBuffer();
+public:
+  ExternalSorter(std::string runs_file_name);
+  ~ExternalSorter();
 };
 
 #endif /* EXTERN_ORD_H_ */

@@ -1,7 +1,6 @@
 #include "tuple.h"
 
 
-
 Tuple::Tuple(uint term_number, uint document_number, uint frequency, uint position, uint run_number){
   term_number_ = term_number;
   document_number_ = document_number;
@@ -13,6 +12,8 @@ Tuple::Tuple(uint term_number, uint document_number, uint frequency, uint positi
 Tuple::~Tuple(){
 
 }
+
+// Getters:
 
 uint Tuple::TermNumber(){
   return term_number_;
@@ -38,16 +39,15 @@ void Tuple::printTuple(){
   std::cout << "<" << TermNumber() << ", " << DocumentNumber() << ", " << Frequency() << ", " << Position() << ", " << RunNumber() << ">" << std::endl;
 }
 
-
-/*
- * ************************************************************************************************
- * ** Tuple run implementation: *******************************************************************
- * ************************************************************************************************
- */
+// Implementation of TupleRun
 
 TupleRun::TupleRun(std::vector<Tuple>& Run, uint run_number){
   this->Run = Run;
   this->run_number = run_number;
+  // With this information, I can know whether there is still data to read or not
+  // Suppose the Run Size is always 40MB and the BLOCK_SIZE is 50kB, every new ReadBlockOfData for this
+  // run increases the relative offset from the start of this run in 50kB. So, when it reaches 40MB I
+  // know there is no more data to read
   run_relative_offset = 0;
 }
 
@@ -64,12 +64,14 @@ void TupleRun::Pop(){
 }
 
 bool TupleRun::HasMoreToRead(){
+  // Just like I said in the constructor
   if(run_relative_offset  >= MEM_SIZE){
     return false;
   }
   return true;
 }
 
+// Reads BLOCK_SIZE of data
 void TupleRun::ReadBlockOfData(std::ifstream& file){
   char* buffer = new char[BLOCK_SIZE];
   // Set the file to the proper position
